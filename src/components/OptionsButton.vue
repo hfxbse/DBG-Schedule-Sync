@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="option_button">
     <!--suppress HtmlFormInputWithoutLabel -->
     <input
         :id="_uid"
@@ -43,6 +43,10 @@ export default {
 </script>
 
 <style scoped>
+.option_button {
+  position: relative;
+}
+
 label {
   font-size: 1.5rem;
   font-weight: 300;
