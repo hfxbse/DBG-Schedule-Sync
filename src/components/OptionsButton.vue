@@ -7,7 +7,8 @@
         :name="group"
         :type="multiselect ? 'checkbox' : 'radio'"
         :value="option"
-        @input="$emit('input', $event.target.value)"
+        @change="input"
+        :disabled="disable"
     >
     <label :for="_uid">
       <span>
@@ -37,8 +38,24 @@ export default {
       type: Boolean,
       required: false,
       default: false
+    },
+    disable: {
+      type: Boolean,
+      required: false,
+      default: false
     }
   },
+  methods: {
+    input($event) {
+      let value = null;
+
+      if($event.target.checked) {
+        value = $event.target.value
+      }
+
+      this.$emit('input', value)
+    }
+  }
 }
 </script>
 
@@ -68,6 +85,10 @@ input:checked + label {
   box-shadow: none;
   font-weight: bold;
   color: white;
+}
+
+input:disabled + label {
+  opacity: 0.25;
 }
 
 input {

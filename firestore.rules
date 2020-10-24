@@ -2,8 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /query_configs/{user_id} {
-      allow create: if request.auth != null
+      allow create: if request.auth != null;
       allow read, update, delete: if request.auth.uid == user_id;
+
+      match /courses/{subject} {
+        allow create: if request.auth != null;
+        allow read, update, delete: if request.auth.uid == user_id;
+      }
     }
   }
 }

@@ -17,7 +17,7 @@ export default {
   grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
 
   width: fit-content;
-  max-width: calc(100vw - 1.5rem * 2);
+  max-width: calc(100vw - 4.2rem);
 
   margin: auto;
 }

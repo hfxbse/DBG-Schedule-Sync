@@ -17,7 +17,7 @@
         <options-button
             v-for="n in 2"
             :key="`grade_K${n}`"
-            v-model="configState.grade"
+            v-model="gradeProxy"
             :checked="configState.grade === n + 11"
             :option="n + 11"
             group="grade"
@@ -28,9 +28,13 @@
 
       <lower-grade-settings v-if="configState.grade !== 0 && configState.grade < 12" v-model="configState"/>
 
-      <div v-else-if="configState.grade > 11">
-        <!-- TODO show course selection -->
-      </div>
+      <course-selection
+          v-else-if="configState.grade > 11"
+          v-model="courses"
+          :main-course-count="mainCourseCount"
+          :religion="configState.religion"
+          @updateReligion="$set(configState, 'religion', $event)"
+      />
 
     </center-container>
     <button v-if="validInput && modified" class="apply_button" @click="save">Speichern</button>
@@ -47,13 +51,26 @@ import {getCurrentUser} from "@/router";
 import ButtonContainer from "@/components/ButtonContainer";
 import LowerGradeSettings from "@/components/LowerGradeSettings";
 import SettingTitle from "@/components/SettingTitle";
+import CourseSelection from "./CourseSelection";
 
 export default {
   name: "Setup",
-  components: {SettingTitle, LowerGradeSettings, ButtonContainer, OptionsButton, centerContainer: Center},
+  components: {
+    CourseSelection,
+    SettingTitle,
+    LowerGradeSettings,
+    ButtonContainer,
+    OptionsButton,
+    centerContainer: Center
+  },
   async created() {
     let user = await getCurrentUser()
     this.$bind('config', firebase.firestore().collection('query_configs').doc(user.uid))
+
+    this.$bind(
+        'rawCourses',
+        firebase.firestore().collection('query_configs').doc(user.uid).collection('courses')
+    )
   },
   methods: {
     getUID(id) {
@@ -74,7 +91,46 @@ export default {
         sport: config.sport,
         religion: config.religion
       })
+
+      if (config.grade > 11) {
+        let db = firebase.firestore()
+        let batch = db.batch();
+
+        let courses = Object.keys(this.courses)
+
+        courses.forEach((course) => {
+          batch.set(doc.collection('courses').doc(course), this.courses[course])
+        })
+
+        batch.commit().then(() => this.coursesState = undefined)
+      }
     },
+    compareCourseOptions(current, old) {
+      current = {...current}
+      old = {...old}
+
+      current = this.nullToUndefined(current)
+
+      return current.main !== old.main || (current.main !== null && current.course_number !== old.course_number)
+    },
+    nullToUndefined(object) {
+      Object.keys(object).forEach(key => {
+        if (object[key] === null) {
+          object[key] = undefined;
+        }
+      })
+
+      return object
+    },
+    actualCourse(course) {
+      return course.main !== undefined && course.main !== null && course.course_number;
+    },
+    rawCoursesToMap(raw) {
+      let courses = {}
+      raw.forEach(course => this.$set(courses, course.id, course))
+
+      return courses;
+    }
   },
   computed: {
     gradeProxy: {
@@ -89,7 +145,7 @@ export default {
       let config = this.configState;
       let grade = config.grade;
 
-      if (grade) {
+      if (grade !== 0 && grade < 12) {
         let valid = config.class !== '' && config.religion !== ''
 
         if (grade < 8) {
@@ -98,14 +154,57 @@ export default {
           valid = valid && config.profile !== ''
           return valid && (config.profile !== 'Sport' && config.sport !== '' || config.profile === 'Sport')
         }
+      } else if (grade > 11) {
+        let hasRequired = this.courses.religion && this.courses.religion.course_number && this.mainCourseCount === 3
+
+        let courseNumbersSelected = !Object.keys(this.courses).some(course => {
+          course = this.courses[course]
+          let number = course.course_number
+          return (number === undefined || number === null) && typeof course.main === 'boolean'
+        })
+
+        return hasRequired && courseNumbersSelected
       }
 
       return false;
     },
     modified() {
       let keys = Object.keys(this.configState)
+      let lowerGradeChanged = !this.config || keys.some(key => this.config[key] !== this.configState[key])
 
-      return !this.config || keys.some(key => this.config[key] !== this.configState[key])
+      let newCourses = Object.keys(this.courses);
+
+      newCourses = newCourses.filter(course => this.actualCourse(this.courses[course]))
+      let actualOldCourses = this.actualOldCourses;
+
+      let upperGradeChanged = newCourses.length !== actualOldCourses.length || actualOldCourses.some(old => {
+        let current = this.courses[old.id];
+        return !current || this.compareCourseOptions(current, old)
+      });
+
+      return lowerGradeChanged || upperGradeChanged;
+    },
+    courses: {
+      get() {
+        return !this.coursesState ? this.rawCoursesToMap(this.rawCourses) : this.coursesState;
+      },
+      set(value) {
+        this.coursesState = value;
+      }
+    },
+    actualOldCourses() {
+      return this.rawCourses.filter(this.actualCourse);
+    },
+    mainCourseCount() {
+      let count = 0;
+      let subjects = Object.keys(this.courses)
+
+      subjects.forEach(subject => count += Boolean(this.courses[subject].main))
+
+      return count;
+    },
+    oldCourses() {
+      return this.rawCoursesToMap(this.rawCourses)
     }
   },
   watch: {
@@ -127,6 +226,36 @@ export default {
           }
         })
       }
+    },
+    oldCourses(current, old) {
+      if (this.coursesState && !this.modified) {
+        this.coursesState = undefined;
+      } else if (this.coursesState && old && current) {
+        Object.keys(current).forEach(c => {
+          c = current[c]
+
+          let id = c.id;
+
+          let o = {...old[id]}
+          let state = {...this.coursesState[id]}
+
+          o = this.nullToUndefined(o)
+          state = this.nullToUndefined(state)
+
+
+          if(this.coursesState[id] !== undefined) {
+            if(state.main === o.main) {
+              this.$set(this.coursesState[id], 'main', c.main)
+            }
+
+            if(state.course_number === o.course_number) {
+              this.$set(this.coursesState[id], 'course_number', Number(c.course_number))
+            }
+          } else {
+            this.$set(this.coursesState, id, c)
+          }
+        })
+      }
     }
   },
   data() {
@@ -139,6 +268,8 @@ export default {
         religion: '',
       },
       config: {},
+      coursesState: undefined,
+      rawCourses: [],
     }
   }
 }
