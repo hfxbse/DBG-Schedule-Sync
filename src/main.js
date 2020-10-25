@@ -1,19 +1,31 @@
 import Vue from 'vue'
-import { firestorePlugin } from 'vuefire'
 
 import * as firebase from 'firebase/app'
-import 'firebase/firestore'
-
 import App from '@/App.vue'
 
 import router from '@/router'
 import '@/registerServiceWorker'
 
-Vue.use(firestorePlugin)
+const firestore = async () => {
+  await import(/* webpackChunkName: "firebase_firestore"*/ 'firebase/firestore')
+  let vuefire = (await import(/* webpackChunkName: "vuefire"*/ 'vuefire')).firestorePlugin
+
+  if (location.hostname === 'localhost') {
+    firebase.firestore().settings({
+      host: 'localhost:8000',
+      ssl: false,
+      experimentalForceLongPolling: true,
+    })
+  }
+
+  Vue.use(vuefire)
+
+  return firebase.firestore()
+}
 
 export function executeInProduction(callback) {
   if (process.env.NODE_ENV === 'production') {
-    callback();
+    return callback();
   }
 }
 
@@ -33,21 +45,17 @@ firebase.initializeApp({
   appId: process.env.VUE_APP_APP_ID,
   measurementId: process.env.VUE_APP_MEASUREMENT_ID,
 })
-executeInProduction(() => firebase.analytics);
 
-if (location.hostname === 'localhost') {
-  firebase.firestore().settings({
-    host: 'localhost:8000',
-    ssl: false,
-    experimentalForceLongPolling: true,
-  })
-}
+executeInProduction(async () => {
+  await import(/* webpackChunkName: "firebase_analytics"*/ 'firebase/analytics')
+  return firebase.analytics();
+});
 
-firebase.firestore()
+firestore().then(() => {
+  Vue.config.productionTip = false
 
-Vue.config.productionTip = false
-
-new Vue({
-  router,
-  render: h => h(App)
-}).$mount('#app')
+  new Vue({
+    router,
+    render: h => h(App)
+  }).$mount('#app')
+})

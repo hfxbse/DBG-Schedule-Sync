@@ -71,9 +71,9 @@
 </template>
 
 <script>
-import OptionsButton from "@/components/OptionsButton";
-import ButtonContainer from "@/components/ButtonContainer";
-import SettingTitle from "@/components/SettingTitle";
+import OptionsButton from '@/components/OptionsButton';
+import ButtonContainer from '@/components/ButtonContainer';
+import SettingTitle from '@/components/SettingTitle';
 
 export default {
   name: "LowerGradeSettings",

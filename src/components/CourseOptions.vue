@@ -38,8 +38,8 @@
   </div>
 </template>
 <script>
-import ButtonContainer from "@/components/ButtonContainer"
-import OptionsButton from "@/components/OptionsButton"
+import ButtonContainer from '@/components/ButtonContainer'
+import OptionsButton from '@/components/OptionsButton'
 
 export default {
   name: 'course-options',

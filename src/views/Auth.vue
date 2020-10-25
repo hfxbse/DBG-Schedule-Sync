@@ -1,35 +1,41 @@
 <template>
   <center-container>
-      <a class="button" @click="authWithGoogle">
-        <img alt="Google Icon" src="@/assets/Google.svg">
-        <span>Sign in with Google</span>
-      </a>
+    <a class="button" @click="authWithGoogle">
+      <img alt="Google Icon" src="@/assets/Google.svg">
+      <span>Sign in with Google</span>
+    </a>
   </center-container>
 </template>
 
 <script>
 import * as firebase from 'firebase/app'
-import 'firebase/auth'
-import Center from "@/components/Center";
+import Center from '@/components/Center';
+
+const auth = async () => {
+  await import(/* webpackChunkName: "firebase_auth"*/ 'firebase/auth')
+  return firebase.auth()
+}
 
 export default {
   name: "Auth",
   components: {centerContainer: Center},
   beforeRouteEnter(_, __, next) {
-    firebase.auth().getRedirectResult().then((result) => {
-      if(result.user) {
+    auth().then(auth => auth.getRedirectResult().then((result) => {
+      if (result.user) {
         next({name: 'Home'})
       } else {
         next(() => document.title = 'DBG Stundenplan Synchronisation - Login')
       }
-    })
+    }))
   },
   methods: {
-    authWithGoogle() {
+    async authWithGoogle() {
+      let instance = await auth()
+
       let provider = new firebase.auth.GoogleAuthProvider()
       provider.addScope('https://www.googleapis.com/auth/calendar.events')
 
-      firebase.auth().signInWithRedirect(provider)
+      instance.signInWithRedirect(provider)
     }
   }
 }

@@ -8,7 +8,7 @@
 
 <script>
 import Setup from '@/components/Setup.vue'
-import Center from "../components/Center";
+import Center from '@/components/Center';
 
 export default {
   name: 'Home',

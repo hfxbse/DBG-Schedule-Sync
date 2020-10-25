@@ -71,10 +71,10 @@
 </template>
 
 <script>
-import SettingTitle from "@/components/SettingTitle";
-import CourseOptions from "@/components/CourseOptions";
-import ButtonContainer from "@/components/ButtonContainer";
-import OptionsButton from "@/components/OptionsButton";
+import SettingTitle from '@/components/SettingTitle';
+import CourseOptions from '@/components/CourseOptions';
+import ButtonContainer from '@/components/ButtonContainer';
+import OptionsButton from '@/components/OptionsButton';
 
 export default {
   name: "CourseSelection",

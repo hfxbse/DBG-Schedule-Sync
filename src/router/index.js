@@ -2,10 +2,14 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 
 import * as firebase from 'firebase/app';
-import 'firebase/auth'
 
-import Auth from "@/views/Auth";
-import Home from '@/views/Home.vue'
+const auth = async () => {
+  await import(/* webpackChunkName: "firebase_auth"*/ 'firebase/auth')
+  return firebase.auth()
+}
+
+const Auth = () => import(/* webpackChunkName: "auth"*/ '@/views/Auth')
+const Home = () => import(/* webpackChunkName: "home"*/ '@/views/Home.vue')
 
 Vue.use(VueRouter)
 
@@ -30,10 +34,12 @@ const router = new VueRouter({
 
 export async function getCurrentUser() {
   return new Promise((resolve, reject) => {
-        const unsubscribe = firebase.auth().onAuthStateChanged(user => {
-          unsubscribe();
-          resolve(user);
-        }, reject);
+        auth().then(auth => {
+          const unsubscribe = auth.onAuthStateChanged(user => {
+            unsubscribe();
+            resolve(user);
+          }, reject);
+        })
       }
   );
 }

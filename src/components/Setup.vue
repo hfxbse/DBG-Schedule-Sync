@@ -1,7 +1,6 @@
 <template>
   <div>
     <center-container>
-
       <setting-title title="Wähle deine Stufe"/>
       <button-container class="grades">
         <options-button
@@ -43,15 +42,20 @@
 
 <script>
 import * as firebase from 'firebase/app'
-import 'firebase/firestore'
 
-import Center from "@/components/Center";
-import OptionsButton from "@/components/OptionsButton";
-import {getCurrentUser} from "@/router";
-import ButtonContainer from "@/components/ButtonContainer";
-import LowerGradeSettings from "@/components/LowerGradeSettings";
-import SettingTitle from "@/components/SettingTitle";
-import CourseSelection from "./CourseSelection";
+const firestore = async () => {
+  await import(/* webpackChunkName: "firebase_firestore"*/ 'firebase/firestore')
+  return firebase.firestore()
+}
+
+import Center from '@/components/Center';
+import OptionsButton from '@/components/OptionsButton';
+import {getCurrentUser} from '@/router';
+import ButtonContainer from '@/components/ButtonContainer';
+import SettingTitle from '@/components/SettingTitle';
+
+const LowerGradeSettings = () => import('@/components/LowerGradeSettings');
+const CourseSelection = () => import('@/components/CourseSelection');
 
 export default {
   name: "Setup",
@@ -65,11 +69,13 @@ export default {
   },
   async created() {
     let user = await getCurrentUser()
-    this.$bind('config', firebase.firestore().collection('query_configs').doc(user.uid))
+    let db = await firestore();
+
+    this.$bind('config', db.collection('query_configs').doc(user.uid))
 
     this.$bind(
         'rawCourses',
-        firebase.firestore().collection('query_configs').doc(user.uid).collection('courses')
+        db.collection('query_configs').doc(user.uid).collection('courses')
     )
   },
   methods: {
@@ -77,7 +83,7 @@ export default {
       return `${id}_${this._uid}`
     },
     async getConfig() {
-      let db = firebase.firestore()
+      let db = await firestore()
       return db.collection('query_configs').doc((await getCurrentUser()).uid)
     },
     async save() {
@@ -93,7 +99,7 @@ export default {
       })
 
       if (config.grade > 11) {
-        let db = firebase.firestore()
+        let db = await firestore()
         let batch = db.batch();
 
         let courses = Object.keys(this.courses)
