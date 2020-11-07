@@ -1,3 +1,5 @@
 node_modules/
 
 /service_account.json
+/oauth_client.json
+/web_client.json

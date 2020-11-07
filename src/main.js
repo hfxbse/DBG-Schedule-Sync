@@ -3,14 +3,21 @@ import Vue from 'vue'
 import * as firebase from 'firebase/app'
 import App from '@/App.vue'
 
+import GAuth from 'vue-google-oauth2'
+
 import router from '@/router'
 import '@/registerServiceWorker'
 
 const firestore = async () => {
   await import(/* webpackChunkName: "firebase_firestore"*/ 'firebase/firestore')
+
   let vuefire = (await import(/* webpackChunkName: "vuefire"*/ 'vuefire')).firestorePlugin
 
   if (location.hostname === 'localhost') {
+    await import(/* webpackChunkName: "firebase_auth"*/ 'firebase/auth')
+
+    firebase.auth().useEmulator('http://localhost:9099/')
+
     firebase.firestore().settings({
       host: 'localhost:8000',
       ssl: false,
@@ -53,6 +60,13 @@ executeInProduction(async () => {
 
 firestore().then(() => {
   Vue.config.productionTip = false
+
+  Vue.use(GAuth, {
+    clientId: process.env.VUE_APP_GOOGLE_OAUTH_CLIENT_ID,
+    fetch_basic_profile: true,
+    ux_mode: 'redirect',
+    scope: 'https://www.googleapis.com/auth/calendar',
+  })
 
   new Vue({
     router,

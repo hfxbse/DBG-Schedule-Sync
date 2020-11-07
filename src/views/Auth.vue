@@ -16,26 +16,33 @@ const auth = async () => {
   return firebase.auth()
 }
 
+const functions = async () => {
+  await import(/* webpackChunkName: "firebase_functions"*/ 'firebase/functions')
+
+  if (location.hostname === 'localhost') {
+    firebase.functions().useFunctionsEmulator('http://localhost:5001');
+  }
+
+  return firebase.functions()
+}
+
 export default {
   name: "Auth",
   components: {centerContainer: Center},
-  beforeRouteEnter(_, __, next) {
-    auth().then(auth => auth.getRedirectResult().then((result) => {
-      if (result.user) {
-        next({name: 'Home'})
-      } else {
-        next(() => document.title = 'DBG Stundenplan Synchronisation - Login')
-      }
-    }))
-  },
   methods: {
     async authWithGoogle() {
-      let instance = await auth()
+      let authCode = await this.$gAuth.getAuthCode()
 
-      let provider = new firebase.auth.GoogleAuthProvider()
-      provider.addScope('https://www.googleapis.com/auth/calendar.events')
+      const authInstance = await auth()
+      const functionsInstance = await functions()
 
-      instance.signInWithRedirect(provider)
+      let {data} = await functionsInstance.httpsCallable('oAuthHandler-googleOAuth')({auth_code: authCode})
+
+      await this.$gAuth.signOut()
+
+      let credentials = new firebase.auth.GoogleAuthProvider().credential(data.id_token)
+      await authInstance.signInWithCredential(credentials)
+      await this.$router.push({name: 'Home'})
     }
   }
 }
