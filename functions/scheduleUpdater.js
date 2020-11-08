@@ -2,6 +2,8 @@ const admin = require('firebase-admin')
 const serviceAccount = require('./service_account.json')
 const {google} = require('googleapis')
 
+const lessonTimings = require('./lesson_timings.json')
+
 const functions = require('firebase-functions');
 
 const religions = {
@@ -75,7 +77,7 @@ function courseToString(config, course) {
       subject = 'inf'
       break
     case 'economy':
-      subject = 'wi'
+      subject = 'wI'
       break
     case 'english':
       subject = 'e'
@@ -155,7 +157,7 @@ async function getChanges(configRef, plan) {
 
     let results = []
     while (queries.length !== 0) {
-      results.concat((await entries.where(
+      results = results.concat((await entries.where(
           'classes', 'array-contains', grade
       ).where(
           'old_subject', 'in', queries.splice(0, 10)
@@ -185,13 +187,13 @@ async function getChanges(configRef, plan) {
     if (config.grade > 7) {
       switch (config.profile) {
         case profiles.science:
-          excludedSubjects.concat([profiles.sport, 'l'])
+          excludedSubjects = excludedSubjects.concat([profiles.sport, 'l', 'lat'])
           break
         case profiles.sport:
-          excludedSubjects.concat([profiles.science, 'l'])
+          excludedSubjects = excludedSubjects.concat([profiles.science, 'l', 'lat'])
           break
         case profiles.latin:
-          excludedSubjects.concat([profiles.science, profiles.sport])
+          excludedSubjects = excludedSubjects.concat([profiles.science, profiles.sport])
           break
       }
     }
@@ -205,12 +207,6 @@ async function getChanges(configRef, plan) {
     ).where(
         'old_subject', 'not-in', excludedSubjects
     ).get());
-
-    console.dir({
-      excludedSubjects,
-      class: `${config.grade}${config.class}`,
-      results: snapshot.size
-    })
 
     return snapshot.docs
   }
@@ -334,13 +330,88 @@ async function addDayInformation(api, calendarId, plan) {
   })
 }
 
+async function addChange(api, calendarId, plan, change) {
+  let date = new Date(plan.date.seconds * 1000)
+
+  let summary, description;
+  if (change.kind !== 'Entfall' && change.old_subject !== change.new_subject) {
+    summary = `${change.new_subject} statt ${change.old_subject}`
+
+    if(change.text.trim() !== '') {
+      description = `<b>${change.kind}</b>\n${change.text}`
+    } else {
+      description = `<b>${change.kind}</b>`
+    }
+  } else {
+    summary = `${change.old_subject} ${change.kind}`
+    description = change.text
+  }
+
+  if(change.classes.length > 1) {
+    if (description !== '') {
+      description += '\n'
+    }
+
+    description += '<em>'
+    change.classes.forEach((c, index) => {
+      description += `${index + 1 === change.classes.length ? ' und ' : index ? ', ' : ''}${c}`;
+    })
+    description += '</em>'
+  }
+
+  let lessons = [...change.lessons.matchAll(/\d+/gi)]
+  let start = new Date(date)
+  let end = new Date(date)
+
+  if (lessons.length) {
+    let lesson = lessons[0][0]
+
+    start.setHours(Number(lessonTimings[lesson].start.hour))
+    start.setMinutes(Number(lessonTimings[lesson].start.minute))
+
+    start = {
+      dateTime: start.toISOString()
+    }
+
+    if (lessons.length > 1) {
+      lesson = lessons[1][0]
+    }
+
+    end.setHours(Number(lessonTimings[lesson].end.hour))
+    end.setMinutes(Number(lessonTimings[lesson].end.minute))
+
+    end = {
+      dateTime: end.toISOString()
+    }
+  } else {
+    end.setDate(end.getDate() + 1)
+
+    start = {date: getApiDateString(start)}
+    end = {date: getApiDateString(end)}
+  }
+
+  let event = {
+    summary: summary.trim(),
+    description: description.trim(),
+    start: start,
+    end: end
+  }
+
+  if (change.kind !== 'Entfall') {
+    event.location = change.room.trim()
+  }
+
+  await api.events.insert({
+    calendarId: calendarId,
+    requestBody: event
+  });
+}
+
 exports.scheduledUpdater = functions.firestore.document('/plans/{id}').onWrite(async (change) => {
   const plan = change.after.data()
 
   const query_configs = (await db.collection('query_configs').get()).docs
   for (const config of query_configs) {
-    // (await getChanges(config, change.after)).forEach(change => console.dir(change.data()))
-
     let calendarCredentials = (await db.collection('calendars').doc(config.id).get()).data().google
     let refreshToken = calendarCredentials.refresh_token
 
@@ -352,5 +423,10 @@ exports.scheduledUpdater = functions.firestore.document('/plans/{id}').onWrite(a
     await clearDay(api, calendarId, plan)
     await updateWeekTypeEvent(api, calendarId, plan)
     await addDayInformation(api, calendarId, plan)
+
+    let changes = await getChanges(config, change.after)
+    for (let change of changes) {
+      await addChange(api, calendarId, plan, change.data())
+    }
   }
 })
