@@ -251,6 +251,22 @@ function getApiDateString(date) {
   return `${date.getFullYear()}-${formatDateDigit(date.getMonth() + 1)}-${formatDateDigit(date.getDate())}`
 }
 
+async function clearDay(api, calendarId, plan) {
+  let startTime = new Date(plan.date.seconds * 1000)
+
+  let events = (await api.events.list({
+    calendarId: calendarId,
+    timeMin: startTime,
+  })).data.items
+
+  for (const event of events) {
+    await api.events.delete({
+      calendarId: calendarId,
+      eventId: event.id
+    })
+  }
+}
+
 async function updateWeekTypeEvent(api, calendarId, plan) {
   let startTime = new Date(plan.date.seconds * 1000)
   startTime.setDate(startTime.getDate() - startTime.getDay() + 1)
@@ -291,6 +307,33 @@ async function updateWeekTypeEvent(api, calendarId, plan) {
   })
 }
 
+async function addDayInformation(api, calendarId, plan) {
+  let date = new Date(plan.date.seconds * 1000)
+
+  plan.information.forEach(entry => {
+    if (/^Vertretungsplan: /.test(entry)) {
+      return
+    }
+
+    let parts = entry.split(/: +/)
+
+    let event = {
+      start: {date: getApiDateString(date)},
+      end: {date: getApiDateString(date)},
+      summary: parts.shift()
+    }
+
+    if (parts.length) {
+      event.description = parts.join(': ')
+    }
+
+    api.events.insert({
+      calendarId: calendarId,
+      requestBody: event
+    });
+  })
+}
+
 exports.scheduledUpdater = functions.firestore.document('/plans/{id}').onWrite(async (change) => {
   const plan = change.after.data()
 
@@ -306,6 +349,8 @@ exports.scheduledUpdater = functions.firestore.document('/plans/{id}').onWrite(a
     let api = google.calendar({version: 'v3', auth: oAuthClient})
     let calendarId = await getCalendarId(api, calendarCredentials, config.id)
 
+    await clearDay(api, calendarId, plan)
     await updateWeekTypeEvent(api, calendarId, plan)
+    await addDayInformation(api, calendarId, plan)
   }
 })
