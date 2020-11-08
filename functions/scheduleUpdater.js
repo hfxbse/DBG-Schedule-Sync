@@ -1,5 +1,6 @@
 const admin = require('firebase-admin')
 const serviceAccount = require('./service_account.json')
+const {google} = require('googleapis')
 
 const functions = require('firebase-functions');
 
@@ -19,6 +20,13 @@ const profiles = {
   sport: 'Sport',
   latin: 'Latein'
 }
+
+const credentials = require('./oauth_client.json').web
+
+const oAuthClient = new google.auth.OAuth2(credentials.client_id, credentials.client_secret, 'postmessage')
+
+const webAppName = 'dbg-schedule-sync'
+const webAppAddress = `https://${webAppName}.web.app/`
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
   admin.initializeApp({credential: admin.credential.cert(serviceAccount)})
@@ -208,11 +216,96 @@ async function getChanges(configRef, plan) {
   }
 }
 
+const db = admin.firestore()
+
+async function getCalendarId(api, credentials, userId) {
+  let calendarId = credentials.id
+
+  if (calendarId === undefined) {
+    calendarId = (await api.calendars.insert({
+      requestBody: {
+        timeZone: 'Europe/Berlin',
+        summary: 'Vertretungsplan',
+        description: `Dein persönlicher DBG-Metzingen Vertretungsplan.\n\nDie Einstellungen findest du auf ${webAppAddress}.`
+      }
+    })).data.id
+
+    await db.collection('calendars').doc(userId).update({
+      google: {
+        refresh_token: credentials.refresh_token,
+        id: calendarId
+      }
+    })
+  }
+
+  return calendarId
+}
+
+function formatDateDigit(number) {
+  number = String(number)
+
+  return number.length === 1 ? `0${number}` : number
+}
+
+function getApiDateString(date) {
+  return `${date.getFullYear()}-${formatDateDigit(date.getMonth() + 1)}-${formatDateDigit(date.getDate())}`
+}
+
+async function updateWeekTypeEvent(api, calendarId, plan) {
+  let startTime = new Date(plan.date.seconds * 1000)
+  startTime.setDate(startTime.getDate() - startTime.getDay() + 1)
+
+  let endTime = new Date(new Date(startTime).setDate(startTime.getDate() + 5));
+
+  let events = (await api.events.list({
+    calendarId: calendarId,
+    timeMin: startTime,
+    timeMax: new Date(new Date(startTime).setMinutes(1))
+  })).data.items
+
+  let event = {
+    start: {date: getApiDateString(startTime)},
+    end: {date: getApiDateString(endTime)},
+    summary: `${plan.week} Woche`
+  }
+
+  if (events.length) {
+    for (let entry of events) {
+      if (entry.end.date === event.end.date) {
+        if (entry.summary !== event.summary) {
+          await api.events.update({
+            calendarId: calendarId,
+            eventId: events[0].id,
+            requestBody: event
+          })
+        }
+
+        return
+      }
+    }
+  }
+
+  await api.events.insert({
+    calendarId: calendarId,
+    requestBody: event
+  })
+}
+
 exports.scheduledUpdater = functions.firestore.document('/plans/{id}').onWrite(async (change) => {
   const plan = change.after.data()
 
-  const query_configs = (await admin.firestore().collection('query_configs').get()).docs
+  const query_configs = (await db.collection('query_configs').get()).docs
   for (const config of query_configs) {
-    (await getChanges(config, change.after)).forEach(change => console.dir(change.data()))
+    // (await getChanges(config, change.after)).forEach(change => console.dir(change.data()))
+
+    let calendarCredentials = (await db.collection('calendars').doc(config.id).get()).data().google
+    let refreshToken = calendarCredentials.refresh_token
+
+    oAuthClient.setCredentials({refresh_token: refreshToken})
+
+    let api = google.calendar({version: 'v3', auth: oAuthClient})
+    let calendarId = await getCalendarId(api, calendarCredentials, config.id)
+
+    await updateWeekTypeEvent(api, calendarId, plan)
   }
 })
