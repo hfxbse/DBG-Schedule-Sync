@@ -57,22 +57,22 @@ function parseRow(row) {
         result.classes = prepareClasses(column.text);
         break;
       case 1:
-        result.lessons = column.text
+        result.lessons = column.text.trim()
         break
       case 2:
-        result.kind = column.text
+        result.kind = column.text.trim()
         break
       case 3:
-        result.old_subject = column.text
+        result.old_subject = column.text.trim()
         break
       case 4:
-        result.new_subject = column.text
+        result.new_subject = column.text.trim()
         break
       case 5:
-        result.room = column.text
+        result.room = column.text.trim()
         break
       case 6:
-        result.text = column.text
+        result.text = column.text.trim()
         break
     }
   })
@@ -113,9 +113,31 @@ async function updateEntries(doc, batch, website) {
   let snapshot = await entries.get()
   snapshot.docs.forEach(entry => batch.delete(entry.ref))
 
-  website.querySelector('.mon_list').childNodes.forEach(node => {
+  let previousText = undefined
+
+  website.querySelector('.mon_list').childNodes.reverse().forEach(node => {
     if (node.classNames && node.classNames.length > 1) {
-      batch.set(entries.doc(), parseRow(node))
+      let row = parseRow(node)
+
+      // catch additional text
+      if (
+          row.classes.length === 0 &&
+          row.lessons === '' &&
+          row.kind === '' &&
+          row.old_subject === '' &&
+          row.new_subject === '' &&
+          row.room === '' &&
+          row.text !== ''
+      ) {
+        previousText = !previousText ? row.text : `${row.text} ${previousText}`
+      } else {
+        if (previousText !== undefined) {
+          row.text += ` ${previousText}`
+          previousText = undefined
+        }
+
+        batch.set(entries.doc(), row)
+      }
     }
   })
 }
