@@ -114,6 +114,8 @@ async function updateEntries(doc, batch, website) {
   snapshot.docs.forEach(entry => batch.delete(entry.ref))
 
   let previousText = undefined
+  let previousRow = {}
+  let entry = undefined
 
   website.querySelector('.mon_list').childNodes.reverse().forEach(node => {
     if (node.classNames && node.classNames.length > 1) {
@@ -136,7 +138,27 @@ async function updateEntries(doc, batch, website) {
           previousText = undefined
         }
 
-        batch.set(entries.doc(), row)
+        if (
+            JSON.stringify(previousRow.classes) === JSON.stringify(row.classes) &&
+            previousRow.kind === row.kind &&
+            previousRow.new_subject === row.new_subject &&
+            previousRow.old_subject === row.old_subject &&
+            previousRow.text === row.text &&
+
+            !/-/.test(previousRow.lessons) &&
+            !/-/.test(row.lessons) &&
+            Number(previousRow.lessons) - 1 === Number(row.lessons)
+        ) {
+          row.lessons += ` - ${previousRow.lessons}`
+          previousRow = {}
+
+          batch.set(entry, row)
+        } else {
+          previousRow = {...row}
+
+          entry = entries.doc()
+          batch.set(entry, row)
+        }
       }
     }
   })
