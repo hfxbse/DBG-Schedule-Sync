@@ -420,7 +420,17 @@ exports.scheduledUpdater = functions.firestore.document('/plans/{id}').onWrite(a
     let api = google.calendar({version: 'v3', auth: oAuthClient})
     let calendarId = await getCalendarId(api, calendarCredentials, config.id)
 
-    await clearDay(api, calendarId, plan)
+    try {
+      await clearDay(api, calendarId, plan)
+    } catch (error) {
+      if(error.code === 404) {
+        calendarCredentials.id = undefined
+        calendarId = await getCalendarId(api, calendarCredentials, config.id)
+      } else {
+        throw error
+      }
+    }
+
     await updateWeekTypeEvent(api, calendarId, plan)
     await addDayInformation(api, calendarId, plan)
 
