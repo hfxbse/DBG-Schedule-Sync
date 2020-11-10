@@ -3,6 +3,7 @@ const serviceAccount = require('./service_account.json')
 const {google} = require('googleapis')
 
 const lessonTimings = require('./lesson_timings.json')
+const changeKinds = require('./changeKinds.json')
 
 const functions = require('firebase-functions');
 
@@ -332,6 +333,10 @@ async function addDayInformation(api, calendarId, plan) {
 
 async function addChange(api, calendarId, plan, change) {
   let date = new Date(plan.date.seconds * 1000)
+
+  if (changeKinds[change.kind]) {
+    change.kind = changeKinds[change.kind]
+  }
 
   let summary, description;
   if (change.kind !== 'Entfall' && change.old_subject !== change.new_subject) {
