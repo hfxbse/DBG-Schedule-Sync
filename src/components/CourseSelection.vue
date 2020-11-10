@@ -24,13 +24,14 @@
     >
       <button-container :class="{religion: true, border: religionSelected}">
         <options-button
-            v-for="r in ['Evangelisch', 'Katholisch', 'Ethik']" :key="r"
-            :checked="religion === r"
-            :option="r"
+            v-for="r in religionLessonTypes"
+            :key="r.value"
+            :checked="religion === r.value"
+            :option="r.value"
             group="region"
             @input="$emit('updateReligion', $event)"
         >
-          {{ r }}
+          {{ r.display }}
         </options-button>
       </button-container>
     </course-options>
@@ -71,10 +72,11 @@
 </template>
 
 <script>
-import SettingTitle from '@/components/SettingTitle';
-import CourseOptions from '@/components/CourseOptions';
-import ButtonContainer from '@/components/ButtonContainer';
-import OptionsButton from '@/components/OptionsButton';
+import SettingTitle from '@/components/SettingTitle'
+import CourseOptions from '@/components/CourseOptions'
+import ButtonContainer from '@/components/ButtonContainer'
+import OptionsButton from '@/components/OptionsButton'
+import {religionLessonTypes} from '@/components/Setup'
 
 export default {
   name: "CourseSelection",
@@ -120,6 +122,7 @@ export default {
 
       return this.value && lastRequired && lastRequired.course_number
     },
+    religionLessonTypes: () => religionLessonTypes
   },
   methods: {
     update(key, value) {

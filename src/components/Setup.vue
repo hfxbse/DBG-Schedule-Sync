@@ -57,6 +57,12 @@ import SettingTitle from '@/components/SettingTitle';
 const LowerGradeSettings = () => import('@/components/LowerGradeSettings');
 const CourseSelection = () => import('@/components/CourseSelection');
 
+export const religionLessonTypes = [
+  {display: 'Evangelisch', value: 'evangelical'},
+  {display: 'Katholisch', value: 'catholic'},
+  {display: 'Ethik', value: 'ethic'}
+]
+
 export default {
   name: "Setup",
   components: {

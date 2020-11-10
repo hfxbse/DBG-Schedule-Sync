@@ -8,20 +8,20 @@ const changeKinds = require('./changeKinds.json')
 const functions = require('firebase-functions');
 
 const religions = {
-  catholic: 'Katholisch',
-  evangelical: 'Evangelisch',
-  ethic: 'Ethik'
+  catholic: 'catholic',
+  evangelical: 'evangelical',
+  ethic: 'ethic'
 }
 
 const sportGroups = {
-  boys: 'Jungs',
-  girls: 'Mädchens'
+  boys: 'boys',
+  girls: 'girls'
 }
 
 const profiles = {
-  science: 'NWT',
-  sport: 'Sport',
-  latin: 'Latein'
+  science: 'science',
+  sport: 'sport',
+  latin: 'latin'
 }
 
 const credentials = require('./oauth_client.json').web

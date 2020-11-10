@@ -19,15 +19,15 @@
       <setting-title title="Wähle dein Profilfach"/>
       <button-container class="profile">
         <options-button
-            v-for="p in ['NWT', 'Sport', 'Latein']"
-            :key="p"
-            :checked="value.profile === p"
-            :option="p"
+            v-for="p in profiles"
+            :key="p.value"
+            :checked="value.profile === p.value"
+            :option="p.value"
             :value="value.profile"
             group="profile"
             @input="updateConfig('profile', $event)"
         >
-          {{ p }}
+          {{ p.display }}
         </options-button>
       </button-container>
     </div>
@@ -36,15 +36,15 @@
       <setting-title title="Wähle dein Religionsunterricht"/>
       <button-container class="religion">
         <options-button
-            v-for="r in ['Evangelisch', 'Katholisch', 'Ethik']"
-            :key="r"
-            :checked="value.religion === r"
-            :option="r"
+            v-for="r in religionLessonTypes"
+            :key="r.value"
+            :checked="value.religion === r.value"
+            :option="r.value"
             :value="value.religion"
             group="religion"
             @input="updateConfig('religion', $event)"
         >
-          {{ r }}
+          {{ r.display }}
         </options-button>
       </button-container>
     </div>
@@ -54,15 +54,15 @@
       <setting-title title="Wähle deine Sportgruppe"/>
       <button-container class="sport">
         <options-button
-            v-for="group in ['Jungs', 'Mädchens']"
-            :key="group"
-            :checked="value.sport === group"
-            :option="group"
+            v-for="group in sportGroups"
+            :key="group.value"
+            :checked="value.sport === group.value"
+            :option="group.value"
             :value="value.sport"
             group="sport"
             @input="updateConfig('sport', $event)"
         >
-          {{ group }}
+          {{ group.display }}
         </options-button>
       </button-container>
     </div>
@@ -71,9 +71,21 @@
 </template>
 
 <script>
-import OptionsButton from '@/components/OptionsButton';
-import ButtonContainer from '@/components/ButtonContainer';
-import SettingTitle from '@/components/SettingTitle';
+import OptionsButton from '@/components/OptionsButton'
+import ButtonContainer from '@/components/ButtonContainer'
+import SettingTitle from '@/components/SettingTitle'
+import {religionLessonTypes} from '@/components/Setup'
+
+const profiles = [
+  {display: 'NWT', value: 'science'},
+  {display: 'Sport', value: 'sport'},
+  {display: 'Latein', value: 'latin'}
+]
+
+const sportGroups = [
+  {display: 'Jungs', value: 'boys'},
+  {display: 'Mädchens', value: 'girls'}
+]
 
 export default {
   name: "LowerGradeSettings",
@@ -83,6 +95,11 @@ export default {
       type: Object,
       required: true
     }
+  },
+  computed: {
+    profiles: () => profiles,
+    sportGroups: () => sportGroups,
+    religionLessonTypes: () => religionLessonTypes
   },
   methods: {
     updateConfig(key, value) {
