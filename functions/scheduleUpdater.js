@@ -417,20 +417,41 @@ exports.scheduledUpdater = functions.firestore.document('/plans/{id}').onWrite(a
 
   const query_configs = (await db.collection('query_configs').get()).docs
   for (const config of query_configs) {
-    let calendarCredentials = (await db.collection('calendars').doc(config.id).get()).data().google
-    let refreshToken = calendarCredentials.refresh_token
+    let credentialsDoc = db.collection('calendars').doc(config.id)
+    let credentials = (await credentialsDoc.get()).data().google
+
+    if(credentials === undefined || credentials.refresh_token === undefined) {
+      continue
+    }
+
+    let refreshToken = credentials.refresh_token
 
     oAuthClient.setCredentials({refresh_token: refreshToken})
 
     let api = google.calendar({version: 'v3', auth: oAuthClient})
-    let calendarId = await getCalendarId(api, calendarCredentials, config.id)
+
+    let calendarId
+
+    try {
+      calendarId = await getCalendarId(api, credentials, config.id)
+    } catch (error) {
+      let response = error.response
+
+      if (response.data.error.code === 403 || response.data.error === 'invalid_grant') {
+        delete credentials.refresh_token
+        await credentialsDoc.set(credentials)
+        continue
+      } else {
+        throw error
+      }
+    }
 
     try {
       await clearDay(api, calendarId, plan)
     } catch (error) {
       if(error.code === 404) {
-        calendarCredentials.id = undefined
-        calendarId = await getCalendarId(api, calendarCredentials, config.id)
+        credentials.id = undefined
+        calendarId = await getCalendarId(api, credentials, config.id)
       } else {
         throw error
       }
