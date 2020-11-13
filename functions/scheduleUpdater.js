@@ -317,7 +317,16 @@ async function addDayInformation(api, calendarId, plan) {
     let event = {
       start: {date: getApiDateString(date)},
       end: {date: getApiDateString(date)},
-      summary: parts.shift()
+      summary: parts.shift(),
+      reminders: {
+        useDefault: false,
+        overrides: [
+          {
+            method: 'popup',
+            minutes: getFirstReminderDiff(date)
+          }
+        ]
+      }
     }
 
     if (parts.length) {
@@ -331,6 +340,15 @@ async function addDayInformation(api, calendarId, plan) {
   })
 }
 
+function getFirstReminderDiff(start) {
+  let reminderTime = new Date(start)
+
+  reminderTime.setDate(reminderTime.getDate() - 1)
+  reminderTime.setHours(20, 0)
+
+  return Math.floor((start.getTime() - reminderTime.getTime()) / 60000)   // Convert milliseconds to minutes
+}
+
 async function addChange(api, calendarId, plan, change) {
   let date = new Date(plan.date.seconds * 1000)
 
@@ -342,7 +360,7 @@ async function addChange(api, calendarId, plan, change) {
   if (change.kind !== 'Entfall' && change.old_subject !== change.new_subject) {
     summary = `${change.new_subject} statt ${change.old_subject}`
 
-    if(change.text.trim() !== '') {
+    if (change.text.trim() !== '') {
       description = `<b>${change.kind}</b>\n${change.text}`
     } else {
       description = `<b>${change.kind}</b>`
@@ -352,7 +370,7 @@ async function addChange(api, calendarId, plan, change) {
     description = change.text
   }
 
-  if(change.classes.length > 1) {
+  if (change.classes.length > 1) {
     if (description !== '') {
       description += '\n'
     }
@@ -368,11 +386,15 @@ async function addChange(api, calendarId, plan, change) {
   let start = new Date(date)
   let end = new Date(date)
 
+  let reminderTimeDiff
+
   if (lessons.length) {
     let lesson = lessons[0][0]
 
     start.setHours(Number(lessonTimings[lesson].start.hour))
     start.setMinutes(Number(lessonTimings[lesson].start.minute))
+
+    reminderTimeDiff = getFirstReminderDiff(start)
 
     start = {
       dateTime: start.toISOString()
@@ -389,6 +411,7 @@ async function addChange(api, calendarId, plan, change) {
       dateTime: end.toISOString()
     }
   } else {
+    reminderTimeDiff = getFirstReminderDiff(start)
     end.setDate(end.getDate() + 1)
 
     start = {date: getApiDateString(start)}
@@ -399,7 +422,24 @@ async function addChange(api, calendarId, plan, change) {
     summary: summary.trim(),
     description: description.trim(),
     start: start,
-    end: end
+    end: end,
+    reminders: {
+      useDefault: false,
+      overrides: [
+        {
+          method: 'popup',
+          minutes: 4
+        },
+        {
+          method: 'popup',
+          minutes: reminderTimeDiff,
+        },
+        {
+          method: 'popup',
+          minutes: reminderTimeDiff - 600   // ten hours later, at 6:00am on the same day
+        }
+      ],
+    }
   }
 
   if (change.kind !== 'Entfall') {
@@ -420,7 +460,7 @@ exports.scheduledUpdater = functions.firestore.document('/plans/{id}').onWrite(a
     let credentialsDoc = db.collection('calendars').doc(config.id)
     let credentials = (await credentialsDoc.get()).data().google
 
-    if(credentials === undefined || credentials.refresh_token === undefined) {
+    if (credentials === undefined || credentials.refresh_token === undefined) {
       continue
     }
 
@@ -449,7 +489,7 @@ exports.scheduledUpdater = functions.firestore.document('/plans/{id}').onWrite(a
     try {
       await clearDay(api, calendarId, plan)
     } catch (error) {
-      if(error.code === 404) {
+      if (error.code === 404) {
         credentials.id = undefined
         calendarId = await getCalendarId(api, credentials, config.id)
       } else {
