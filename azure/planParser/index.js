@@ -97,7 +97,11 @@ function updatePlanInfo(doc, batch, website) {
   planDate = new Date(Number(planDate[2]), Number(planDate[1]) - 1, Number(planDate[0]))
 
   let information = []
-  website.querySelector('.info').querySelectorAll('td').forEach(item => information.push(item.text))
+  let elements = website.querySelector('.info')
+
+  if (elements) {
+    elements.querySelectorAll('td').forEach(item => information.push(item.text))
+  }
 
   batch.set(doc, {
     synced: admin.firestore.FieldValue.serverTimestamp(),
