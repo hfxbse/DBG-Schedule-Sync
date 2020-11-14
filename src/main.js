@@ -5,7 +5,6 @@ import App from '@/App.vue'
 
 import GAuth from 'vue-google-oauth2'
 
-import router from '@/router'
 import '@/registerServiceWorker'
 
 const firestore = async () => {
@@ -69,7 +68,6 @@ firestore().then(() => {
   })
 
   new Vue({
-    router,
     render: h => h(App)
   }).$mount('#app')
 })

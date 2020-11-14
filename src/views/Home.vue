@@ -1,7 +1,17 @@
 <template>
   <div v-if="online">
-    <button @click="logout">Ausloggen</button>
-    <setup/>
+    <button v-if="user" @click="logout">Ausloggen</button>
+    <button v-else @click="menuVisible = true">Einloggen</button>
+    <setup
+        :pendingSave="pendingSave"
+        :user="user"
+        @authorize="pendingSave = menuVisible = true"
+        @saved="pendingSave = false"
+    />
+
+    <center-container v-if="menuVisible" class="menu" @click.self="pendingSave = menuVisible = false">
+      <auth v-if="!user" @success="menuVisible = false"/>
+    </center-container>
   </div>
   <center-container v-else>
     <h1>You're offline.</h1>
@@ -11,7 +21,8 @@
 <script>
 import Setup from '@/components/Setup.vue'
 import Center from '@/components/Center';
-import * as firebase from "firebase";
+import * as firebase from 'firebase/app';
+import Auth from "@/components/Auth";
 
 const auth = async () => {
   await import(/* webpackChunkName: "firebase_auth"*/ 'firebase/auth')
@@ -20,25 +31,27 @@ const auth = async () => {
 
 export default {
   name: 'Home',
-  components: {centerContainer: Center, Setup},
-  beforeRouteEnter(_, __, next) {
-    next(() => document.title = 'DBG Stundenplan Synchronisation')
-  },
+  components: {Auth, centerContainer: Center, Setup},
   created() {
     document.ononline = () => this.online = true
     document.onoffline = () => this.online = false
+
+    auth().then(() => firebase.auth().onAuthStateChanged(user => this.user = user))
   },
   data() {
     return {
-      online: window.navigator.onLine
+      online: window.navigator.onLine,
+      user: null,
+      menuVisible: false,
+      pendingSave: false,
     }
   },
   methods: {
     async logout() {
       await (await auth()).signOut()
-      await this.$router.push({name: 'Auth'})
     }
-  }
+  },
+  watch: {}
 }
 </script>
 
@@ -67,5 +80,20 @@ button {
   box-shadow: 0 3px 3px rgba(0, 0, 0, 0.2);
 
   outline: none;
+}
+
+.menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+
+  background: rgba(0, 0, 0, .8);
+
+  z-index: 2;
+}
+
+.menu * {
+  z-index: 3;
 }
 </style>

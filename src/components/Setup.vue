@@ -36,23 +36,23 @@
       />
 
     </center-container>
-    <button v-if="validInput && modified" class="apply_button" @click="save">Speichern</button>
+    <button v-if="validInput && modified" class="apply_button" @click="user ? save() : $emit('authorize')">
+      Speichern
+    </button>
   </div>
 </template>
 
 <script>
 import * as firebase from 'firebase/app'
+import Center from '@/components/Center';
+import OptionsButton from '@/components/OptionsButton';
+import ButtonContainer from '@/components/ButtonContainer';
+import SettingTitle from '@/components/SettingTitle';
 
 const firestore = async () => {
   await import(/* webpackChunkName: "firebase_firestore"*/ 'firebase/firestore')
   return firebase.firestore()
 }
-
-import Center from '@/components/Center';
-import OptionsButton from '@/components/OptionsButton';
-import {getCurrentUser} from '@/router';
-import ButtonContainer from '@/components/ButtonContainer';
-import SettingTitle from '@/components/SettingTitle';
 
 const LowerGradeSettings = () => import('@/components/LowerGradeSettings');
 const CourseSelection = () => import('@/components/CourseSelection');
@@ -73,28 +73,29 @@ export default {
     OptionsButton,
     centerContainer: Center
   },
-  async created() {
-    let user = await getCurrentUser()
-    let db = await firestore();
-
-    this.$bind('config', db.collection('query_configs').doc(user.uid))
-
-    this.$bind(
-        'rawCourses',
-        db.collection('query_configs').doc(user.uid).collection('courses')
-    )
+  props: {
+    user: {
+      required: true,
+    },
+    pendingSave: {
+      required: true,
+      type: Boolean
+    }
   },
   methods: {
-    getUID(id) {
-      return `${id}_${this._uid}`
-    },
     async getConfig() {
       let db = await firestore()
-      return db.collection('query_configs').doc((await getCurrentUser()).uid)
+      return db.collection('query_configs').doc(this.user.uid)
     },
     async save() {
       let doc = await this.getConfig()
-      let config = this.configState;
+      let config = {...this.configState};
+
+      ['grade', 'class', 'profile', 'sport', 'religion'].forEach(key => {
+        if (config[key] === undefined) {
+          config[key] = null
+        }
+      })
 
       doc.set({
         grade: Number(config.grade),
@@ -102,7 +103,7 @@ export default {
         profile: config.profile,
         sport: config.sport,
         religion: config.religion
-      })
+      });
 
       if (config.grade > 11) {
         let db = await firestore()
@@ -157,14 +158,14 @@ export default {
       let config = this.configState;
       let grade = config.grade;
 
-      if (grade !== 0 && grade < 12) {
-        let valid = config.class !== '' && config.religion !== ''
+      if (grade && grade < 12) {
+        let valid = config.class && config.religion
 
         if (grade < 8) {
-          return valid && config.sport !== ''
+          return valid && config.sport
         } else if (grade < 12) {
-          valid = valid && config.profile !== ''
-          return valid && (config.profile !== 'Sport' && config.sport !== '' || config.profile === 'Sport')
+          valid = valid && config.profile
+          return valid && (config.profile !== 'sport' && config.sport || config.profile === 'sport')
         }
       } else if (grade > 11) {
         let hasRequired = this.courses.religion && this.courses.religion.course_number && this.mainCourseCount === 3
@@ -255,12 +256,12 @@ export default {
           state = this.nullToUndefined(state)
 
 
-          if(this.coursesState[id] !== undefined) {
-            if(state.main === o.main) {
+          if (this.coursesState[id] !== undefined) {
+            if (state.main === o.main) {
               this.$set(this.coursesState[id], 'main', c.main)
             }
 
-            if(state.course_number === o.course_number) {
+            if (state.course_number === o.course_number) {
               this.$set(this.coursesState[id], 'course_number', Number(c.course_number))
             }
           } else {
@@ -268,17 +269,36 @@ export default {
           }
         })
       }
+    },
+    user: {
+      immediate: true,
+      async handler(user, oldUser) {
+        if (user) {
+          let db = await firestore();
+
+          if (this.validInput && this.modified && this.pendingSave) {
+            await this.save()
+            this.$emit('saved')
+          }
+
+          this.$bind('config', db.collection('query_configs').doc(user.uid))
+          this.$bind(
+              'rawCourses',
+              db.collection('query_configs').doc(user.uid).collection('courses')
+          )
+        } else if (!user && oldUser) {
+          this.$unbind('config', () => {
+          })
+          this.$unbind('rawCourses', () => [])
+
+          this.configState = {}
+        }
+      }
     }
   },
   data() {
     return {
-      configState: {
-        grade: 0,
-        class: '',
-        profile: '',
-        sport: '',
-        religion: '',
-      },
+      configState: {},
       config: {},
       coursesState: undefined,
       rawCourses: [],

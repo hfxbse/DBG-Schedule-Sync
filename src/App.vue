@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <router-view/>
+    <home/>
   </div>
 </template>
 
@@ -20,3 +20,10 @@ html, body, #app {
   --ink-blue: #3351BB
 }
 </style>
+<script>
+import Home from "./views/Home";
+
+export default {
+  components: {Home}
+}
+</script>

@@ -4,7 +4,8 @@
       "name": "tableUpdater",
       "type": "timerTrigger",
       "direction": "in",
-      "schedule": "0 10 10,15 * * 1-5"
+      "schedule": "0 10 10,15 * * 1-5",
+      "runOnStartup": "true"
     }
   ]
 }

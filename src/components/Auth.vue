@@ -1,15 +1,14 @@
 <template>
-  <center-container>
+  <div>
     <a class="button" @click="authWithGoogle">
       <img alt="Google Icon" src="@/assets/Google.svg">
-      <span>Sign in with Google</span>
+      <span>Anmelden mit Google</span>
     </a>
-  </center-container>
+  </div>
 </template>
 
 <script>
 import * as firebase from 'firebase/app'
-import Center from '@/components/Center';
 
 const auth = async () => {
   await import(/* webpackChunkName: "firebase_auth"*/ 'firebase/auth')
@@ -28,7 +27,6 @@ const functions = async () => {
 
 export default {
   name: "Auth",
-  components: {centerContainer: Center},
   methods: {
     async authWithGoogle() {
       let authCode = await this.$gAuth.getAuthCode()
@@ -42,7 +40,8 @@ export default {
 
       let credentials = new firebase.auth.GoogleAuthProvider().credential(data.id_token)
       await authInstance.signInWithCredential(credentials)
-      await this.$router.push({name: 'Home'})
+
+      this.$emit('success')
     }
   }
 }
@@ -60,6 +59,8 @@ export default {
 
   box-shadow: var(--element-shadow);
   border-radius: 1.75rem;
+
+  background: white;
 }
 
 img {

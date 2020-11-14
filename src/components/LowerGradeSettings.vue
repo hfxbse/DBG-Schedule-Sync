@@ -15,7 +15,7 @@
       </options-button>
     </button-container>
 
-    <div v-if="value.class !== '' && value.grade > 7">
+    <div v-if="value.class && value.grade > 7">
       <setting-title title="Wähle dein Profilfach"/>
       <button-container class="profile">
         <options-button
@@ -32,7 +32,7 @@
       </button-container>
     </div>
 
-    <div v-if="value.class !== '' && (value.grade < 8 || value.profile !== '')">
+    <div v-if="value.class && (value.grade < 8 || value.profile)">
       <setting-title title="Wähle dein Religionsunterricht"/>
       <button-container class="religion">
         <options-button
@@ -50,7 +50,7 @@
     </div>
 
     <div
-        v-if="value.religion !== '' && (value.grade < 8 && value.class || value.profile !== '' && value.profile !== 'Sport')">
+        v-if="value.religion && (value.grade < 8 && value.class || value.profile && value.profile !== 'sport')">
       <setting-title title="Wähle deine Sportgruppe"/>
       <button-container class="sport">
         <options-button
