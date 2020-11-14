@@ -1,3 +1,9 @@
+/*
+ * currently using await after each api call, due to the leak of an batch interface in the google api library
+ * TODO: find way to do batch requests
+ *
+ */
+
 const admin = require('firebase-admin')
 const serviceAccount = require('./service_account.json')
 const {google} = require('googleapis')
