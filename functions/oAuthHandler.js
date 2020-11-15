@@ -19,7 +19,7 @@ exports.googleOAuth = functions.https.onCall(async ({auth_code}) => {
 
   const {tokens} = await client.getToken(auth_code)
 
-  if(tokens.refresh_token) {
+  if (tokens.refresh_token) {
     const entry = {
       google: {
         refresh_token: tokens.refresh_token
@@ -29,7 +29,7 @@ exports.googleOAuth = functions.https.onCall(async ({auth_code}) => {
     try {
       let credentials = new firebase.auth.GoogleAuthProvider().credential(tokens.id_token)
 
-      if(process.env.FIRESTORE_EMULATOR_HOST) {
+      if (process.env.FIRESTORE_EMULATOR_HOST) {
         firebase.auth().useEmulator('http://localhost:9099/')
       }
 

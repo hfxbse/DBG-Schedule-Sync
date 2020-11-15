@@ -5,7 +5,6 @@
  */
 
 const admin = require('firebase-admin')
-const serviceAccount = require('./service_account.json')
 const {google} = require('googleapis')
 
 const lessonTimings = require('./lesson_timings.json')
@@ -36,12 +35,6 @@ const oAuthClient = new google.auth.OAuth2(credentials.client_id, credentials.cl
 
 const webAppName = 'dbg-schedule-sync'
 const webAppAddress = `https://${webAppName}.web.app/`
-
-if (!process.env.FIRESTORE_EMULATOR_HOST) {
-  admin.initializeApp({credential: admin.credential.cert(serviceAccount)})
-} else {
-  admin.initializeApp({projectId: 'dbg-schedule-sync'})
-}
 
 function unknownSubjectAbbreviation(subject) {
   console.warn(`Subject abbreviation unknown for "${subject}"`)

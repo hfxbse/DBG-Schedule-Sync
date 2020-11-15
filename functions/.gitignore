@@ -4,3 +4,4 @@ node_modules/
 /oauth_client.json
 /web_client.json
 /changeKinds.json
+/firebase-debug.log

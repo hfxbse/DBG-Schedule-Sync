@@ -14,9 +14,10 @@
   },
   "main": "index.js",
   "dependencies": {
-    "firebase-admin": "^9.3.0",
+    "firebase": "^8.0.2",
+    "firebase-admin": "^9.4.1",
     "firebase-functions": "^3.6.1",
-    "googleapis": "^62.0.0"
+    "googleapis": "^64.0.0"
   },
   "devDependencies": {
     "eslint": "^5.12.0",
