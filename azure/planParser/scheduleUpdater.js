@@ -10,8 +10,6 @@ const {google} = require('googleapis')
 const lessonTimings = require('./lesson_timings.json')
 const changeKinds = require('./changeKinds.json')
 
-const functions = require('firebase-functions');
-
 const religions = {
   catholic: 'catholic',
   evangelical: 'evangelical',
@@ -147,7 +145,7 @@ function courseToString(config, course) {
 async function getChanges(configRef, plan) {
   let config = configRef.data()
 
-  const entries = await plan.ref.collection('entries')
+  const entries = plan.collection('entries')
 
   if (config.grade > 11) {
     let courses = (await configRef.ref.collection('courses').get()).docs
@@ -451,8 +449,9 @@ async function addChange(api, calendarId, plan, change) {
   });
 }
 
-exports.scheduledUpdater = functions.firestore.document('/plans/{id}').onWrite(async (change) => {
-  const plan = change.after.data()
+exports.scheduledUpdater = async (planNumber) => {
+  const planRef = db.collection('plans').doc(planNumber.toString())
+  const plan = (await planRef.get()).data()
 
   const query_configs = (await db.collection('query_configs').get()).docs
   for (const config of query_configs) {
@@ -499,9 +498,9 @@ exports.scheduledUpdater = functions.firestore.document('/plans/{id}').onWrite(a
     await updateWeekTypeEvent(api, calendarId, plan)
     await addDayInformation(api, calendarId, plan)
 
-    let changes = await getChanges(config, change.after)
+    let changes = await getChanges(config, planRef)
     for (let change of changes) {
       await addChange(api, calendarId, plan, change.data())
     }
   }
-})
+}

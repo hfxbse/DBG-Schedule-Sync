@@ -9,5 +9,4 @@ admin.initializeApp({credential: admin.credential.cert(serviceAccount)})
 //   admin.initializeApp({projectId: 'dbg-schedule-sync'})
 // }
 
-exports.scheduleUpdater = require('./scheduleUpdater').scheduledUpdater
 exports.oAuthHandler = require('./oAuthHandler')

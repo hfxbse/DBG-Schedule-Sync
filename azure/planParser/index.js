@@ -11,6 +11,8 @@ if (process.env.ASPNETCORE_ENVIRONMENT === 'Production') {
   admin.initializeApp({projectId: 'dbg-schedule-sync'})
 }
 
+const scheduleUpdater = require('./scheduleUpdater').scheduledUpdater
+
 async function download(url, encoding) {
   return new Promise((resolve, reject) => {
     https.get(url, response => {
@@ -191,6 +193,12 @@ module.exports = async function (context) {
     await batch.commit()
 
     context.log.verbose(`Updated the representation plans successfully.`)
+
+    for (let i = 0; i < timetables.data.length; i++) {
+      await scheduleUpdater(i + 1)
+    }
+
+    context.log.verbose(`Synced the calenders successfully.`)
   } catch (e) {
     context.log.error(`Failed to update representation plans: ${e}`)
     throw e
