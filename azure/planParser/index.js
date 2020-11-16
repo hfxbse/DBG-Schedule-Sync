@@ -82,6 +82,16 @@ function parseRow(row) {
   return result
 }
 
+function adjustTimezone(date) {
+  let invdate = new Date(date.toLocaleString('en-US', {
+    timeZone: 'Europe/Berlin'
+  }));
+
+  let diff = date.getTime() - invdate.getTime();
+
+  return new Date(date.getTime() + diff);
+}
+
 function updatePlanInfo(doc, batch, website) {
   const updateText = website.querySelector('.mon_head').querySelector('p').childNodes
   const dateText = website.querySelector('.mon_title').rawText
@@ -96,7 +106,7 @@ function updatePlanInfo(doc, batch, website) {
   updateDateTime = new Date(Number(date[2]), Number(date[1]) - 1, Number(date[0]), Number(time[0]), Number(time[1]))
 
   let planDate = dateText.split(/ +/)[0].split('.')
-  planDate = new Date(Number(planDate[2]), Number(planDate[1]) - 1, Number(planDate[0]))
+  planDate = adjustTimezone(new Date(Number(planDate[2]), Number(planDate[1]) - 1, Number(planDate[0])))
 
   let information = []
   let elements = website.querySelector('.info')

@@ -303,6 +303,7 @@ async function updateWeekTypeEvent(api, calendarId, plan) {
 
 async function addDayInformation(api, calendarId, plan) {
   let date = new Date(plan.date.seconds * 1000)
+  date.setDate(date.getDate() + 1)
 
   plan.information.forEach(entry => {
     if (/^Vertretungsplan: /.test(entry)) {
@@ -320,7 +321,7 @@ async function addDayInformation(api, calendarId, plan) {
         overrides: [
           {
             method: 'popup',
-            minutes: getFirstReminderDiff(date)
+            minutes: getFirstReminderDiff(date, date)
           }
         ]
       }
@@ -337,11 +338,10 @@ async function addDayInformation(api, calendarId, plan) {
   })
 }
 
-function getFirstReminderDiff(start) {
-  let reminderTime = new Date(start)
+function getFirstReminderDiff(day, start) {
+  let reminderTime = new Date(day)
 
-  reminderTime.setDate(reminderTime.getDate() - 1)
-  reminderTime.setHours(20, 0)
+  reminderTime.setHours(reminderTime.getHours() - 4)
 
   return Math.floor((start.getTime() - reminderTime.getTime()) / 60000)   // Convert milliseconds to minutes
 }
@@ -388,10 +388,10 @@ async function addChange(api, calendarId, plan, change) {
   if (lessons.length) {
     let lesson = lessons[0][0]
 
-    start.setHours(Number(lessonTimings[lesson].start.hour))
-    start.setMinutes(Number(lessonTimings[lesson].start.minute))
+    start.setHours(start.getHours() + Number(lessonTimings[lesson].start.hour))
+    start.setMinutes(start.getMinutes() + Number(lessonTimings[lesson].start.minute))
 
-    reminderTimeDiff = getFirstReminderDiff(start)
+    reminderTimeDiff = getFirstReminderDiff(date, start)
 
     start = {
       dateTime: start.toISOString()
@@ -401,14 +401,14 @@ async function addChange(api, calendarId, plan, change) {
       lesson = lessons[1][0]
     }
 
-    end.setHours(Number(lessonTimings[lesson].end.hour))
-    end.setMinutes(Number(lessonTimings[lesson].end.minute))
+    end.setHours(end.getHours() + Number(lessonTimings[lesson].end.hour))
+    end.setMinutes(end.getMinutes() + Number(lessonTimings[lesson].end.minute))
 
     end = {
       dateTime: end.toISOString()
     }
   } else {
-    reminderTimeDiff = getFirstReminderDiff(start)
+    reminderTimeDiff = getFirstReminderDiff(date, start)
     end.setDate(end.getDate() + 1)
 
     start = {date: getApiDateString(start)}
