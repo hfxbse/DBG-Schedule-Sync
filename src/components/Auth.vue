@@ -1,9 +1,10 @@
 <template>
   <div>
-    <a class="button" @click="authWithGoogle">
+    <button class="button" @click="authWithGoogle">
       <img alt="Google Icon" src="@/assets/Google.svg">
       <span>Anmelden mit Google</span>
-    </a>
+    </button>
+    <p v-if="missingCookies" class="error">Drittanbieter-Cookies müssen zum anmelden aktiviert sein.</p>
   </div>
 </template>
 
@@ -29,19 +30,32 @@ export default {
   name: "Auth",
   methods: {
     async authWithGoogle() {
-      let authCode = await this.$gAuth.getAuthCode()
+      try {
+        const authCode = await this.$gAuth.getAuthCode();
 
-      const authInstance = await auth()
-      const functionsInstance = await functions()
+        const authInstance = await auth()
+        const functionsInstance = await functions()
 
-      let {data} = await functionsInstance.httpsCallable('oAuthHandler-googleOAuth')({auth_code: authCode})
+        let {data} = await functionsInstance.httpsCallable('oAuthHandler-googleOAuth')({auth_code: authCode})
 
-      await this.$gAuth.signOut()
+        await this.$gAuth.signOut()
 
-      let credentials = new firebase.auth.GoogleAuthProvider().credential(data.id_token)
-      await authInstance.signInWithCredential(credentials)
+        let credentials = new firebase.auth.GoogleAuthProvider().credential(data.id_token)
+        await authInstance.signInWithCredential(credentials)
 
-      this.$emit('success')
+        this.$emit('success')
+      } catch (e) {
+        if (e === false) {
+          this.missingCookies = true
+        } else {
+          throw e;
+        }
+      }
+    }
+  },
+  data() {
+    return {
+      missingCookies: false
     }
   }
 }
@@ -50,6 +64,7 @@ export default {
 <style scoped>
 .button {
   padding: 0.75rem;
+  outline: none;
 
   width: 17.5rem;
 
@@ -58,6 +73,7 @@ export default {
   align-items: center;
 
   box-shadow: var(--element-shadow);
+  border: none;
   border-radius: 1.75rem;
 
   background: white;
@@ -73,5 +89,16 @@ span {
   margin: auto;
   padding-right: 1.5rem;
   font-weight: 500;
+  font-size: 1rem;
+}
+
+.error {
+  color: red;
+  font-weight: 500;
+  text-align: center;
+
+  margin-top: 1rem;
+  width: 17.5rem;
+
 }
 </style>
