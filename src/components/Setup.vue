@@ -298,6 +298,7 @@ export default {
           this.$unbind('config', () => {
           })
           this.$unbind('rawCourses', () => [])
+          this.coursesState = {}
 
           this.configState = {}
         }
