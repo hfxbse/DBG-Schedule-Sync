@@ -25,7 +25,7 @@
         </options-button>
       </button-container>
 
-      <lower-grade-settings v-if="configState.grade !== 0 && configState.grade < 12" v-model="configState"/>
+      <lower-grade-settings v-if="configState.grade && configState.grade < 12" v-model="configState"/>
 
       <course-selection
           v-else-if="configState.grade > 11"
@@ -38,6 +38,9 @@
     </center-container>
     <button v-if="validInput && modified" class="apply_button" @click="user ? save() : $emit('authorize')">
       Speichern
+    </button>
+    <button v-else-if="modified && configState.grade" class="apply_button incomplete">
+      Konfiguration unvollständig
     </button>
   </div>
 </template>
@@ -135,8 +138,13 @@ export default {
 
       return object
     },
-    actualCourse(course) {
-      return course.main !== undefined && course.main !== null && course.course_number;
+    actualCourse(course, requireNumber) {
+      if (typeof requireNumber !== "boolean") {
+        requireNumber = true
+      }
+
+      let selected = course.main !== undefined && course.main !== null;
+      return requireNumber ? selected && course.course_number : selected
     },
     rawCoursesToMap(raw) {
       let courses = {}
@@ -187,7 +195,7 @@ export default {
 
       let newCourses = Object.keys(this.courses);
 
-      newCourses = newCourses.filter(course => this.actualCourse(this.courses[course]))
+      newCourses = newCourses.filter(course => this.actualCourse(this.courses[course], false))
       let actualOldCourses = this.actualOldCourses;
 
       let upperGradeChanged = newCourses.length !== actualOldCourses.length || actualOldCourses.some(old => {
@@ -326,6 +334,10 @@ export default {
   font-size: 1.2rem;
   color: white;
   font-weight: bold;
+}
+
+.incomplete {
+  background: #909090;
 }
 
 .grades {
