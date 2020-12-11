@@ -124,6 +124,14 @@ function updatePlanInfo(doc, batch, website) {
   })
 }
 
+function compareEntryData(row, other) {
+  return JSON.stringify(other.classes) === JSON.stringify(row.classes) &&
+      other.kind === row.kind &&
+      other.new_subject === row.new_subject &&
+      other.old_subject === row.old_subject &&
+      other.text === row.text
+}
+
 async function updateEntries(doc, batch, website) {
   let entries = doc.collection('entries')
   let snapshot = await entries.get()
@@ -155,12 +163,7 @@ async function updateEntries(doc, batch, website) {
         }
 
         if (
-            JSON.stringify(previousRow.classes) === JSON.stringify(row.classes) &&
-            previousRow.kind === row.kind &&
-            previousRow.new_subject === row.new_subject &&
-            previousRow.old_subject === row.old_subject &&
-            previousRow.text === row.text &&
-
+            compareEntryData(previousRow, row) &&
             !/-/.test(previousRow.lessons) &&
             !/-/.test(row.lessons) &&
             Number(previousRow.lessons) - 1 === Number(row.lessons)
@@ -169,7 +172,7 @@ async function updateEntries(doc, batch, website) {
           previousRow = {}
 
           batch.set(entry, row)
-        } else {
+        } else if (!(compareEntryData(previousRow, row) && previousRow.lessons === row.lessons)) {
           previousRow = {...row}
 
           entry = entries.doc()
