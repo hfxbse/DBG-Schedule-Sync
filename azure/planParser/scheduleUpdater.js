@@ -165,14 +165,20 @@ async function getChanges(configRef, plan, context) {
 
     let grade = `K${config.grade - 11}`;
 
-    let results = []
+    let results = [], promises = []
+
     while (queries.length !== 0) {
-      results = results.concat((await entries.where(
+      promises.push(entries.where(
           'classes', 'array-contains', grade
       ).where(
           'old_subject', 'in', queries.splice(0, 10)
-      ).get()).docs)
+      ).get())
     }
+
+    promises = await Promise.all(promises)
+    promises.forEach(({docs}) => {
+      if (docs) results = results.concat(docs)
+    })
 
     return results
   } else {
