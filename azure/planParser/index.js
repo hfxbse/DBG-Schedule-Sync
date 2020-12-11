@@ -205,7 +205,7 @@ module.exports = async function (context) {
     context.log.verbose(`Updated the representation plans successfully.`)
 
     for (let i = 0; i < timetables.data.length; i++) {
-      await scheduleUpdater(i + 1)
+      await scheduleUpdater(i + 1, context)
     }
 
     context.log.verbose(`Synced the calenders successfully.`)

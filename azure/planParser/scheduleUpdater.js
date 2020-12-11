@@ -34,8 +34,8 @@ const oAuthClient = new google.auth.OAuth2(credentials.client_id, credentials.cl
 const webAppName = 'dbg-schedule-sync'
 const webAppAddress = `https://${webAppName}.web.app/`
 
-function unknownSubjectAbbreviation(subject) {
-  console.warn(`Subject abbreviation unknown for "${subject}"`)
+function unknownSubjectAbbreviation(subject, context) {
+  context.log.warn(`Subject abbreviation unknown for "${subject}"`)
 }
 
 function getReligionAbbreviation(config) {
@@ -50,12 +50,12 @@ function getReligionAbbreviation(config) {
   }
 }
 
-function courseToString(config, course) {
+function courseToStrings(config, course, context) {
   let subject = course.id
   course = course.data()
 
   if (course.main === null || course.course_number === null) {
-    return
+    return []
   }
 
   switch (subject) {
@@ -63,8 +63,8 @@ function courseToString(config, course) {
       subject = 'bk'
       break
     case 'astronomy':
-      unknownSubjectAbbreviation(subject)
-      return;
+      unknownSubjectAbbreviation(subject, context)
+      return []
     case 'biology':
       subject = 'bio'
       break
@@ -120,7 +120,7 @@ function courseToString(config, course) {
       subject = 'psy'
       break
     case 'seminar':
-      subject = 'bll'
+      subject = 'SF'
       break
     case 'sport':
       subject = 'sp'
@@ -129,20 +129,30 @@ function courseToString(config, course) {
       subject = 'thea'
       break
     case 'vk_language':
-      unknownSubjectAbbreviation(subject)
+      unknownSubjectAbbreviation(subject, context)
       return;
     case 'vk_math':
-      unknownSubjectAbbreviation(subject)
+      unknownSubjectAbbreviation(subject, context)
       return;
     default:
-      console.warn(`Unknown subject "${course.id}"`)
+      context.log.warn(`Unknown subject "${course.id}"`)
       return
   }
 
-  return `${course.main ? subject.toUpperCase() : subject}${course.course_number}`
+  if (course.main) {
+    subject = subject.toUpperCase()
+  }
+
+  let courseStrings = [`${subject}${course.course_number}`]
+
+  if (Number(course.course_number) === 1) {
+    courseStrings.push(subject)
+  }
+
+  return courseStrings;
 }
 
-async function getChanges(configRef, plan) {
+async function getChanges(configRef, plan, context) {
   let config = configRef.data()
 
   const entries = plan.collection('entries')
@@ -150,8 +160,10 @@ async function getChanges(configRef, plan) {
   if (config.grade > 11) {
     let courses = (await configRef.ref.collection('courses').get()).docs
 
-    let queries = courses.map(course => courseToString(config, course)).filter(text => text)
-    let grade = `K${config.grade - 11}`
+    let queries = []
+    courses.forEach(course => queries = queries.concat(courseToStrings(config, course, context)));
+
+    let grade = `K${config.grade - 11}`;
 
     let results = []
     while (queries.length !== 0) {
@@ -449,7 +461,7 @@ async function addChange(api, calendarId, plan, change) {
   });
 }
 
-exports.scheduledUpdater = async (planNumber) => {
+exports.scheduledUpdater = async (planNumber, context) => {
   const planRef = db.collection('plans').doc(planNumber.toString())
   const plan = (await planRef.get()).data()
 
@@ -498,7 +510,7 @@ exports.scheduledUpdater = async (planNumber) => {
     await updateWeekTypeEvent(api, calendarId, plan)
     await addDayInformation(api, calendarId, plan)
 
-    let changes = await getChanges(config, planRef)
+    let changes = await getChanges(config, planRef, context)
     for (let change of changes) {
       await addChange(api, calendarId, plan, change.data())
     }
