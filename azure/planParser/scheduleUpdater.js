@@ -162,6 +162,7 @@ async function getChanges(configRef, plan, context) {
 
     let queries = []
     courses.forEach(course => queries = queries.concat(courseToStrings(config, course, context)));
+    queries = queries.filter(course => course !== undefined && courses !== null);
 
     let grade = `K${config.grade - 11}`;
 
