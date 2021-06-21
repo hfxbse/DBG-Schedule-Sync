@@ -10,7 +10,9 @@ module.exports = {
     pages: {
         index: {
             entry: 'src/main.js',
-            title: 'DBG Vertretungsplan Synchronisation'
+            title: 'DBG Vertretungsplan Synchronisation',
+            googleVerificationIdOne: process.env.GOOGLE_VERIFICATION_ID_ONE,
+            googleVerificationIdTwo: process.env.GOOGLE_VERIFICATION_ID_TWO
         }
     }
 };
