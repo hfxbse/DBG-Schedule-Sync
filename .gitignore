@@ -33,3 +33,5 @@ pnpm-debug.log*
 
 
 /.firebase/
+
+/public/privacy.pdf
