@@ -31,13 +31,17 @@ html, body, #app {
 <style scoped>
 .links {
   position: fixed;
-  top: 1.7rem;
+  top: 1.1rem;
   right: 1rem;
 
   z-index: 10;
 
   display: flex;
   justify-content: right;
+
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem 0.75rem;
+  border-radius: 3rem;
 }
 
 @media (max-width: 50ch) {

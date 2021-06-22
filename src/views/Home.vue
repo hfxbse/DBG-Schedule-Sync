@@ -72,7 +72,7 @@ button {
   font-size: 1rem;
   font-weight: 200;
 
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.9);
   padding: .5rem 1rem;
 
   border: none;
@@ -88,7 +88,7 @@ button {
   left: 0;
   width: 100vw;
 
-  background: rgba(0, 0, 0, .8);
+  background: rgba(0, 0, 0, 0.8);
 
   z-index: 2;
 }

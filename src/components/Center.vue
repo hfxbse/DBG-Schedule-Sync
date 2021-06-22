@@ -1,6 +1,6 @@
 <template>
   <div class="center" @click="$emit('click', $event)">
-    <div>
+    <div :class="{without: lift}">
       <slot></slot>
     </div>
   </div>
@@ -8,7 +8,14 @@
 
 <script>
 export default {
-  name: "Center"
+  name: "Center",
+  props: {
+    lift: {
+      type: Boolean,
+      required: false,
+      default: false
+    }
+  }
 }
 </script>
 
@@ -22,5 +29,11 @@ export default {
 
 .center > * {
   padding: 5rem 1.5rem 12rem;
+}
+
+@media (min-width: 70ch) {
+  .without {
+    padding-bottom: 17rem;
+  }
 }
 </style>

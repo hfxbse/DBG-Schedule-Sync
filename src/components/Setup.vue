@@ -1,6 +1,26 @@
 <template>
   <div>
-    <center-container>
+    <center-container :lift="true">
+      <div class="info">
+        <img src="@/assets/calendar.svg" alt="Info">
+        <h2>DBG Vertretungsplan Synchronisation</h2>
+      </div>
+      <p>
+        Unten wählst du deine Klasse und Fächer aus, bzw. die Kurse, in denen du bist.
+      </p>
+      <p>
+        Nach dem Anmelden und Speichern werden zukünftig Einträge auf dem Vertretungsplan, welche deiner
+        Auswahl entsprechen, mit deinen Google Kalender synchronisiert. Somit wirst du immer benachrichtigt,
+        wenn sich für dich was ändert.
+      </p>
+      <p>
+        Für die Einträge wird ein separater Kalender erstellt. Nur dieser Kalender wird automatisch verwaltet.
+        Aktualisierungen erfolgen etwa zeitgleich mit den Aktualisierungen des Online-Vertretungsplans, ohne
+        dass du dafür auf diese Webseite gehen musst.
+      </p>
+      <p>
+        Das ganze sieht dann auf deinen Google Kalender etwa wie
+        <a href="https://imgur.com/SirZztp" target="_blank">hier</a> aus.</p>
       <setting-title title="Wähle deine Stufe"/>
       <button-container class="grades">
         <options-button
@@ -307,7 +327,9 @@ export default {
   },
   data() {
     return {
-      configState: {},
+      configState: {
+        religion: "",
+      },
       config: {},
       coursesState: undefined,
       rawCourses: [],
@@ -317,6 +339,54 @@ export default {
 </script>
 
 <style scoped>
+.info {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 50ch) {
+  .info {
+    margin-top: 4rem;
+  }
+}
+
+.info img {
+  height: 3.75rem;
+  margin: auto 0.75rem auto 0;
+}
+
+.info h2 {
+  margin: auto 0.75rem auto 0;
+}
+
+@media (max-width: 70ch) {
+  .info {
+    margin-bottom: 0;
+  }
+
+  .info h2 {
+    max-width: 20ch;
+  }
+}
+
+p {
+  text-align: center;
+  line-height: 150%;
+
+  max-width: 75ch;
+  margin: 0.75rem auto;
+}
+
+p:last-of-type {
+  margin-bottom: 12.5%;
+}
+
+a {
+  text-decoration: none;
+  color: var(--ink-blue);
+}
+
 .apply_button {
   position: fixed;
   bottom: 0;
