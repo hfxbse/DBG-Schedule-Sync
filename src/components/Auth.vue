@@ -1,8 +1,8 @@
 <template>
   <div>
-    <button class="button" @click="authWithGoogle">
+    <button :class="{button: true, working}" @click="authWithGoogle">
       <img alt="Google Icon" src="@/assets/Google.svg">
-      <span>Anmelden mit Google</span>
+      <span>{{ working ? "Anmeldung mit Google läuft" : "Anmelden mit Google" }}</span>
     </button>
     <p v-if="missingCookies" class="error">Drittanbieter-Cookies müssen zum anmelden aktiviert sein.</p>
   </div>
@@ -33,6 +33,8 @@ export default {
       try {
         const authCode = await this.$gAuth.getAuthCode();
 
+        this.working = true;
+
         const authInstance = await auth()
         const functionsInstance = await functions()
 
@@ -50,11 +52,14 @@ export default {
         } else {
           throw e;
         }
+      } finally {
+        this.working = false;
       }
     }
   },
   data() {
     return {
+      working: false,
       missingCookies: false
     }
   }
@@ -90,6 +95,12 @@ span {
   padding-right: 1.5rem;
   font-weight: 500;
   font-size: 1rem;
+}
+
+.working span {
+  font-style: italic;
+  font-weight: 300;
+  padding-right: 0.5rem;
 }
 
 .error {
