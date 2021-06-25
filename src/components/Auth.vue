@@ -16,6 +16,11 @@ const auth = async () => {
   return firebase.auth()
 }
 
+const analytics = async () => {
+  await import(/* webpackChunkName: "firebase_auth"*/ 'firebase/analytics')
+  return firebase.analytics()
+}
+
 const functions = async () => {
   await import(/* webpackChunkName: "firebase_functions"*/ 'firebase/functions')
 
@@ -43,7 +48,11 @@ export default {
         await this.$gAuth.signOut()
 
         let credentials = new firebase.auth.GoogleAuthProvider().credential(data.id_token)
-        await authInstance.signInWithCredential(credentials)
+        let user = await authInstance.signInWithCredential(credentials)
+
+        if(user.additionalUserInfo.isNewUser) {
+          analytics().then(analytics => analytics.logEvent('sign_up'));
+        }
 
         this.$emit('success')
       } catch (e) {

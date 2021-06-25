@@ -52,10 +52,7 @@ firebase.initializeApp({
   measurementId: process.env.VUE_APP_MEASUREMENT_ID,
 })
 
-executeInProduction(async () => {
-  await import(/* webpackChunkName: "firebase_analytics"*/ 'firebase/analytics')
-  return firebase.analytics();
-});
+import(/* webpackChunkName: "firebase_analytics"*/ 'firebase/analytics').then(() => firebase.analytics())
 
 firestore().then(() => {
   Vue.config.productionTip = false

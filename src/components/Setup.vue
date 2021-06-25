@@ -77,6 +77,11 @@ const firestore = async () => {
   return firebase.firestore()
 }
 
+const analytics = async () => {
+  await import(/* webpackChunkName: "firebase_firestore"*/ 'firebase/analytics')
+  return firebase.analytics()
+}
+
 const LowerGradeSettings = () => import('@/components/LowerGradeSettings');
 const CourseSelection = () => import('@/components/CourseSelection');
 
@@ -111,6 +116,8 @@ export default {
       return db.collection('query_configs').doc(this.user.uid)
     },
     async save() {
+      analytics().then(analytics => analytics.logEvent('save'));
+
       let doc = await this.getConfig()
       let config = {...this.configState};
 
@@ -179,6 +186,10 @@ export default {
         return this.configState.grade
       },
       set(value) {
+        if(this.configState.grade === undefined) {
+          analytics().then(analytics => analytics.logEvent('config_start'))
+        }
+
         this.$set(this.configState, 'grade', Number(value))
       }
     },
