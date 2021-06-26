@@ -1,8 +1,12 @@
 <template>
   <div id="app">
     <div class="links">
-      <a href="/privacy.pdf">Datenschutz</a>
-      <a class="github" href="https://github.com/StuBITtv/DBG-Schedule-Sync">
+      <a href="/privacy.pdf" @auxclick="log('view_privacy')" @click="log('view_privacy')">Datenschutz</a>
+      <a
+          class="github" href="https://github.com/StuBITtv/DBG-Schedule-Sync"
+          @auxclick="log('visit_source')"
+          @click="log('visit_source')"
+      >
         <img alt="GitHub Icon" src="@/assets/GitHub.svg">
         <span>Quellcode</span>
       </a>
@@ -81,9 +85,20 @@ a:first-child {
 </style>
 
 <script>
-import Home from "./views/Home";
+import Home from "@/views/Home";
+import firebase from "firebase/app";
+
+const analytics = async () => {
+  await import(/* webpackChunkName: "firebase_firestore"*/ 'firebase/analytics')
+  return firebase.analytics()
+}
 
 export default {
-  components: {Home}
+  components: {Home},
+  methods: {
+    log(eventName) {
+      analytics().then(analytics => analytics.logEvent(eventName));
+    }
+  }
 }
 </script>

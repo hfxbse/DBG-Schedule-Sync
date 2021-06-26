@@ -2,7 +2,7 @@
   <div>
     <center-container :lift="true">
       <div class="info">
-        <img src="@/assets/calendar.svg" alt="Info">
+        <img alt="Info" src="@/assets/calendar.svg">
         <h2>DBG Vertretungsplan Synchronisation</h2>
       </div>
       <p>
@@ -20,7 +20,15 @@
       </p>
       <p>
         Das ganze sieht dann auf deinen Google Kalender etwa wie
-        <a href="https://imgur.com/SirZztp" target="_blank">hier</a> aus.</p>
+        <a
+            href="https://imgur.com/SirZztp"
+            target="_blank"
+            @auxclick="log('visit_preview')"
+           @click="log('visit_preview')">
+          hier
+        </a>
+        aus.
+      </p>
       <setting-title title="Wähle deine Stufe"/>
       <button-container class="grades">
         <options-button
@@ -111,6 +119,9 @@ export default {
     }
   },
   methods: {
+    log(eventName) {
+      analytics().then(analytics => analytics.logEvent(eventName));
+    },
     async getConfig() {
       let db = await firestore()
       return db.collection('query_configs').doc(this.user.uid)
@@ -186,7 +197,7 @@ export default {
         return this.configState.grade
       },
       set(value) {
-        if(this.configState.grade === undefined) {
+        if (this.configState.grade === undefined) {
           analytics().then(analytics => analytics.logEvent('config_start'))
         }
 
