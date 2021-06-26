@@ -5,6 +5,8 @@ const HTMLParser = require('node-html-parser')
 const admin = require('firebase-admin');
 const serviceAccount = require('./service_account.json')
 
+const createEvent = require("./event").createEvent
+
 if (process.env.ASPNETCORE_ENVIRONMENT === 'Production') {
   admin.initializeApp({credential: admin.credential.cert(serviceAccount)})
 } else {
@@ -122,6 +124,8 @@ function updatePlanInfo(doc, batch, website) {
     information: information,
     week: dateText[dateText.length - 1]
   })
+
+  return planDate;
 }
 
 function compareEntryData(row, other) {
@@ -132,7 +136,7 @@ function compareEntryData(row, other) {
       other.text === row.text
 }
 
-async function updateEntries(doc, batch, website) {
+async function updateEntries(doc, batch, website, planDate) {
   let entries = doc.collection('entries')
   let snapshot = await entries.get()
   snapshot.docs.forEach(entry => batch.delete(entry.ref))
@@ -171,12 +175,12 @@ async function updateEntries(doc, batch, website) {
           row.lessons += ` - ${previousRow.lessons}`
           previousRow = {}
 
-          batch.set(entry, row)
+          batch.set(entry, {...row, event: createEvent(row, planDate)})
         } else if (!(compareEntryData(previousRow, row) && previousRow.lessons === row.lessons)) {
           previousRow = {...row}
 
           entry = entries.doc()
-          batch.set(entry, row)
+          batch.set(entry, {...row, event: createEvent(row, planDate)})
         }
       }
     }
@@ -199,8 +203,8 @@ module.exports = async function (context) {
       const website = HTMLParser.parse(await download(table.url, 'latin1'))
 
       let doc = db.collection('plans').doc(String(i + 1))
-      updatePlanInfo(doc, batch, website)
-      await updateEntries(doc, batch, website)
+      let planDate = updatePlanInfo(doc, batch, website)
+      await updateEntries(doc, batch, website, planDate)
     }
 
     await batch.commit()

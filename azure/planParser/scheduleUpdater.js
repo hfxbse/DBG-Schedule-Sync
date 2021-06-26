@@ -7,8 +7,7 @@
 const admin = require('firebase-admin')
 const {google} = require('googleapis')
 
-const lessonTimings = require('./lesson_timings.json')
-const changeKinds = require('./changeKinds.json')
+const {getApiDateString, getFirstReminderDiff} = require('./event')
 
 const religions = {
   catholic: 'catholic',
@@ -285,16 +284,6 @@ async function getCalendarId(api, credentials, userId) {
   return calendarId
 }
 
-function formatDateDigit(number) {
-  number = String(number)
-
-  return number.length === 1 ? `0${number}` : number
-}
-
-function getApiDateString(date) {
-  return `${date.getFullYear()}-${formatDateDigit(date.getMonth() + 1)}-${formatDateDigit(date.getDate())}`
-}
-
 async function clearDay(context, api, calendarId, plan) {
   let startTime = new Date(plan.date.seconds * 1000)
 
@@ -386,114 +375,10 @@ function addDayInformation(context, api, calendarId, plan) {
   }));
 }
 
-function getFirstReminderDiff(day, start) {
-  let reminderTime = new Date(day)
-
-  reminderTime.setHours(reminderTime.getHours() - 4)
-
-  return Math.floor((start.getTime() - reminderTime.getTime()) / 60000)   // Convert milliseconds to minutes
-}
-
-async function addChange(api, calendarId, plan, change) {
-  let date = new Date(plan.date.seconds * 1000)
-
-  if (changeKinds[change.kind]) {
-    change.kind = changeKinds[change.kind]
-  }
-
-  let summary, description;
-  if (change.kind !== 'Entfall' && change.old_subject !== change.new_subject) {
-    summary = `${change.new_subject} statt ${change.old_subject}`
-
-    if (change.text.trim() !== '') {
-      description = `<b>${change.kind}</b>\n${change.text}`
-    } else {
-      description = `<b>${change.kind}</b>`
-    }
-  } else {
-    summary = `${change.old_subject} ${change.kind}`
-    description = change.text
-  }
-
-  if (change.classes.length > 1) {
-    if (description !== '') {
-      description += '\n'
-    }
-
-    description += '<em>'
-    change.classes.forEach((c, index) => {
-      description += `${index + 1 === change.classes.length ? ' und ' : index ? ', ' : ''}${c}`;
-    })
-    description += '</em>'
-  }
-
-  let lessons = [...change.lessons.matchAll(/\d+/gi)]
-  let start = new Date(date)
-  let end = new Date(date)
-
-  let reminderTimeDiff
-
-  if (lessons.length) {
-    let lesson = lessons[0][0]
-
-    start.setHours(start.getHours() + Number(lessonTimings[lesson].start.hour))
-    start.setMinutes(start.getMinutes() + Number(lessonTimings[lesson].start.minute))
-
-    reminderTimeDiff = getFirstReminderDiff(date, start)
-
-    start = {
-      dateTime: start.toISOString()
-    }
-
-    if (lessons.length > 1) {
-      lesson = lessons[1][0]
-    }
-
-    end.setHours(end.getHours() + Number(lessonTimings[lesson].end.hour))
-    end.setMinutes(end.getMinutes() + Number(lessonTimings[lesson].end.minute))
-
-    end = {
-      dateTime: end.toISOString()
-    }
-  } else {
-    reminderTimeDiff = getFirstReminderDiff(date, start)
-    end.setDate(end.getDate() + 1)
-
-    start = {date: getApiDateString(start)}
-    end = {date: getApiDateString(end)}
-  }
-
-  let event = {
-    summary: summary.trim(),
-    description: description.trim(),
-    start: start,
-    end: end,
-    reminders: {
-      useDefault: false,
-      overrides: [
-        {
-          method: 'popup',
-          minutes: 4
-        },
-        {
-          method: 'popup',
-          minutes: reminderTimeDiff,
-        },
-        {
-          method: 'popup',
-          minutes: reminderTimeDiff - 600   // ten hours later, at 6:00am on the same day
-        }
-      ],
-    }
-  }
-
-  if (change.kind !== 'Entfall') {
-    event.location = change.room.trim()
-  }
-
-  await api.events.insert({
+function addChange(api, calendarId, change) {
+  return  api.events.insert({
     calendarId: calendarId,
-    requestBody: event
+    requestBody: change.event
   });
 }
 
