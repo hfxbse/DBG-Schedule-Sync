@@ -213,7 +213,7 @@ module.exports = async function (context) {
 
     context.log.verbose(`Synced the calenders successfully.`)
   } catch (e) {
-    context.log.error(`Failed to update representation plans: ${e}`)
+    context.log.error(`Failed to update representation plans`, e)
     throw e
   }
 }
