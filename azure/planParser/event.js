@@ -1,5 +1,5 @@
 const lessonTimings = require('./lesson_timings.json')
-const changeKinds = require('./changeKinds.json')
+const changeTypes = require('./change_types.json')
 
 function formatDateDigit(number) {
   number = String(number)
@@ -23,8 +23,8 @@ exports.getApiDateString = getApiDateString;
 exports.getFirstReminderDiff = getFirstReminderDiff;
 
 exports.createEvent = (row, date) => {
-  if (changeKinds[row.kind]) {
-    row.kind = changeKinds[row.kind]
+  if (changeTypes[row.kind]) {
+    row.kind = changeTypes[row.kind]
   }
 
   let summary, description;
