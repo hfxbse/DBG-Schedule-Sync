@@ -1,10 +1,10 @@
 {
   "bindings": [
     {
-      "name": "TableUpdater",
+      "name": "SynchronisationSchedule",
       "type": "timerTrigger",
       "direction": "in",
-      "schedule": "0 10 8,14 * * 1-5"
+      "schedule": "0 12 8,14,23 * * *"
     }
   ]
 }

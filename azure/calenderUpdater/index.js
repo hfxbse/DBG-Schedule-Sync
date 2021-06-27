@@ -1,13 +1,7 @@
-/*
- * currently using await after each api call, due to the leak of an batch interface in the google api library
- * TODO: find way to do batch requests
- *
- */
-
-const admin = require('firebase-admin')
+const admin = require("../admin").admin
 const {google} = require('googleapis')
 
-const {getApiDateString, getFirstReminderDiff} = require('./event')
+const {getApiDateString, getFirstReminderDiff} = require('../event')
 
 const religions = {
   catholic: 'catholic',
@@ -382,68 +376,72 @@ function addChange(api, calendarId, change) {
   });
 }
 
-exports.scheduledUpdater = async (planNumber, context) => {
-  const planRef = db.collection('plans').doc(planNumber.toString())
-  const plan = (await planRef.get()).data()
-
+module.exports = async (context) => {
+  const plans = (await db.collection('plans').get()).docs;
   const query_configs = (await db.collection('query_configs').get()).docs
 
-  await rateLimiter(context, query_configs.map( config => async () => {
-    context.userUid = config.id;
 
-    let oAuthClient = new google.auth.OAuth2(credentials.client_id, credentials.client_secret, 'postmessage')
+  for(let snapshot of plans) {
+      let plan = snapshot.data();
 
-    try {
-      let credentialsDoc = db.collection('calendars').doc(config.id)
-      let credentials = (await credentialsDoc.get()).data().google
+      await rateLimiter(context, query_configs.map( config => async () => {
+        const current = {...context, userUid: config.id};
 
-      if (credentials === undefined || credentials.refresh_token === undefined) {
-        return
-      }
+        let oAuthClient = new google.auth.OAuth2(credentials.client_id, credentials.client_secret, 'postmessage')
 
-      let refreshToken = credentials.refresh_token
+        try {
+          let credentialsDoc = db.collection('calendars').doc(config.id)
+          let credentials = (await credentialsDoc.get()).data().google
 
-      oAuthClient.setCredentials({refresh_token: refreshToken})
+          if (credentials === undefined || credentials.refresh_token === undefined) {
+            return
+          }
 
-      let api = google.calendar({version: 'v3', auth: oAuthClient})
+          let refreshToken = credentials.refresh_token
 
-      let calendarId
+          oAuthClient.setCredentials({refresh_token: refreshToken})
 
-      try {
-        calendarId = await getCalendarId(api, credentials, config.id)
-      } catch (error) {
-        let response = error.response
+          let api = google.calendar({version: 'v3', auth: oAuthClient})
 
-        if (response.data.error.code === 403 || response.data.error === 'invalid_grant') {
-          delete credentials.refresh_token
-          await credentialsDoc.set(credentials)
-          return
-        } else {
-          // noinspection ExceptionCaughtLocallyJS
-          throw error;
+          let calendarId
+
+          try {
+            calendarId = await getCalendarId(api, credentials, config.id)
+          } catch (error) {
+            let response = error.response
+
+            if (response.data.error.code === 403 || response.data.error === 'invalid_grant') {
+              delete credentials.refresh_token
+              await credentialsDoc.set(credentials)
+              return
+            } else {
+              // noinspection ExceptionCaughtLocallyJS
+              throw error;
+            }
+          }
+
+          try {
+            await clearDay(current, api, calendarId, plan)
+          } catch (error) {
+            if (error.code === 404) {
+              credentials.id = undefined
+              calendarId = await getCalendarId(api, credentials, config.id)
+            } else {
+              // noinspection ExceptionCaughtLocallyJS
+              throw error;
+            }
+          }
+
+          await updateWeekTypeEvent(api, calendarId, plan)
+          await addDayInformation(current, api, calendarId, plan)
+
+          let changes = await getChanges(config, snapshot.ref, current)
+
+          await rateLimiter(current, changes.map(change => () => addChange(api, calendarId, change.data())))
+        } catch (error) {
+          current.log.error(`Calender synchronisation failed for user ${config.id}`, error)
         }
-      }
-
-      try {
-        await clearDay(context, api, calendarId, plan)
-      } catch (error) {
-        if (error.code === 404) {
-          credentials.id = undefined
-          calendarId = await getCalendarId(api, credentials, config.id)
-        } else {
-          // noinspection ExceptionCaughtLocallyJS
-          throw error;
-        }
-      }
-
-      await updateWeekTypeEvent(api, calendarId, plan)
-      await addDayInformation(context, api, calendarId, plan)
-
-      let changes = await getChanges(config, planRef, context)
-
-      await rateLimiter(context, changes.map(change => () => addChange(api, calendarId, change.data())))
-    } catch (error) {
-      context.log.error(`Calender synchronisation failed for user ${config.id}`, error)
+      }), 20)
     }
-  }), 20)
+
 }

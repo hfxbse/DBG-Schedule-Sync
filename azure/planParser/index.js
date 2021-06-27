@@ -2,18 +2,9 @@ const DSB = require('dsbapi')
 const https = require('https')
 const HTMLParser = require('node-html-parser')
 
-const admin = require('firebase-admin');
-const serviceAccount = require('./service_account.json')
+const admin = require("../admin").admin
 
-const createEvent = require("./event").createEvent
-
-if (process.env.ASPNETCORE_ENVIRONMENT === 'Production') {
-  admin.initializeApp({credential: admin.credential.cert(serviceAccount)})
-} else {
-  admin.initializeApp({projectId: 'dbg-schedule-sync'})
-}
-
-const scheduleUpdater = require('./scheduleUpdater').scheduledUpdater
+const createEvent = require("../event").createEvent
 
 async function download(url, encoding) {
   return new Promise((resolve, reject) => {
@@ -187,37 +178,24 @@ async function updateEntries(doc, batch, website, planDate) {
   })
 }
 
-module.exports = async function (context) {
+module.exports = async function () {
   const dsb = new DSB(process.env.DSB_MOBILE_USER, process.env.DSB_MOBILE_PASSWORD)
 
-  try {
-    const data = await dsb.fetch();
-    const timetables = DSB.findMethodInData('timetable', data)
+  const data = await dsb.fetch();
+  const timetables = DSB.findMethodInData('timetable', data)
 
-    const db = admin.firestore();
-    const batch = db.batch();
+  const db = admin.firestore();
+  const batch = db.batch();
 
-    for (let i = 0; i < timetables.data.length; i++) {
-      let table = timetables.data[i]
+  for (let i = 0; i < timetables.data.length; i++) {
+    let table = timetables.data[i]
 
-      const website = HTMLParser.parse(await download(table.url, 'latin1'))
+    const website = HTMLParser.parse(await download(table.url, 'latin1'))
 
-      let doc = db.collection('plans').doc(String(i + 1))
-      let planDate = updatePlanInfo(doc, batch, website)
-      await updateEntries(doc, batch, website, planDate)
-    }
-
-    await batch.commit()
-
-    context.log.verbose(`Updated the representation plans successfully.`)
-
-    for (let i = 0; i < timetables.data.length; i++) {
-      await scheduleUpdater(i + 1, context)
-    }
-
-    context.log.verbose(`Synced the calenders successfully.`)
-  } catch (e) {
-    context.log.error(`Failed to update representation plans`, e)
-    throw e
+    let doc = db.collection('plans').doc(String(i + 1))
+    let planDate = updatePlanInfo(doc, batch, website)
+    await updateEntries(doc, batch, website, planDate)
   }
+
+  await batch.commit()
 }

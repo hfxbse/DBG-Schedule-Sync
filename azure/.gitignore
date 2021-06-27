@@ -42,5 +42,5 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-/planParser/service_account.json
-/planParser/oauth_client.json
+service_account.json
+/*/oauth_client.json
