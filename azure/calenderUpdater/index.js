@@ -29,12 +29,29 @@ function unknownSubjectAbbreviation(subject, context) {
   context.log.warn(`Subject abbreviation unknown for "${subject}"`, {userUid: context.userUid})
 }
 
-function getReligionAbbreviation(config) {
+function getReligionAbbreviation(config, course) {
   if (config.religion !== religions.ethic) {
+    const ending = config.religion === religions.evangelical ? 'ev' : 'rk';
+
     if (config.grade > 11) {
-      return 'rel'
+      let abbreviations = []
+
+      if(course.course_number === 1) {
+        abbreviations = ['rel', `rel ${ending}`]
+      } else if(ending === 'rk') {
+        abbreviations = ['rel rk']
+      }
+
+      abbreviations.push(`rel ${ending}${course.course_number}`)
+      abbreviations.push(`rel${course.course_number}`)
+
+      if(course.main) {
+        abbreviations = abbreviations.map(abbreviation => abbreviation.toUpperCase());
+      }
+
+      return abbreviations
     } else {
-      return `rel ${config.religion === religions.evangelical ? 'ev' : 'rk'}`
+      return `rel ${ending}`
     }
   } else {
     return 'eth'
@@ -105,8 +122,13 @@ function courseToStrings(config, course, context) {
       subject = 'gk'
       break
     case 'religion':
-      subject = getReligionAbbreviation(config);
-      break
+      subject = getReligionAbbreviation(config, course);
+
+      if(typeof subject !== "string") {   // only Ethic needs further preparation
+        return subject
+      }
+      break;
+
     case 'psychology':
       subject = 'psy'
       break
