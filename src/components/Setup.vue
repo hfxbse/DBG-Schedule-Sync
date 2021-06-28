@@ -127,7 +127,13 @@ export default {
       return db.collection('query_configs').doc(this.user.uid)
     },
     async save() {
-      analytics().then(analytics => analytics.logEvent('save'));
+      analytics().then(analytics => {
+        if((this.config ?? {}) === {}) {
+          analytics.logEvent('config_created')
+        }
+
+        analytics.logEvent('save');
+      });
 
       let doc = await this.getConfig()
       let config = {...this.configState};
