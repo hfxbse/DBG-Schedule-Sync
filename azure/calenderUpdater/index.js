@@ -176,7 +176,12 @@ async function actionRunner(context, action,  retryDepth = 0, maxDepth=2, error)
   try {
     await action()
   } catch (e) {
-    context.log.warn("Rate limit exceeded, waiting 2 min before retrying", {userUid, retryDepth, maxDepth, e});
+    context.log.warn(`Rate limit exceeded, waiting ${10 * (retryDepth + 1)} seconds before retrying`, {
+      userUid,
+      retryDepth: (retryDepth + 1),
+      maxDepth : (maxDepth + 1),
+      e
+    });
 
     ++retryDepth;
 
@@ -186,7 +191,7 @@ async function actionRunner(context, action,  retryDepth = 0, maxDepth=2, error)
             await actionRunner(context, action, retryDepth, maxDepth, e);
             resolve();
           },
-          2 * 60 * 1000    // 2 min
+          (10 * (retryDepth + 1)) * 1000    // 10 seconds
       )
     });
   }
@@ -311,7 +316,7 @@ async function clearDay(context, api, calendarId, plan) {
   return rateLimiter(context, events.map(event => () => api.events.delete({
     calendarId: calendarId,
     eventId: event.id
-  }) ))
+  })))
 }
 
 async function updateWeekTypeEvent(api, calendarId, plan) {
