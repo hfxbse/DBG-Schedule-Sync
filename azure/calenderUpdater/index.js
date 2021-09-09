@@ -165,7 +165,13 @@ function courseToStrings(config, course, context) {
   return courseStrings;
 }
 
-async function actionRunner(context, action,  retryDepth = 0, maxDepth=2, error) {
+function randomBetween(min, max) {
+  return Math.floor(
+      Math.random() * (max - min) + min
+  );
+}
+
+async function actionRunner(context, action,  retryDepth = 0, maxDepth=3, error) {
   let userUid = context.userUid;
 
   if(retryDepth === maxDepth) {
@@ -176,7 +182,9 @@ async function actionRunner(context, action,  retryDepth = 0, maxDepth=2, error)
   try {
     await action()
   } catch (e) {
-    context.log.warn(`Rate limit exceeded, waiting ${10 * (retryDepth + 1)} seconds before retrying`, {
+    const delay = 15 * (retryDepth + 1) + randomBetween(0, 7);
+
+    context.log.warn(`Rate limit exceeded, waiting ${delay} seconds before retrying`, {
       userUid,
       retryDepth: (retryDepth + 1),
       maxDepth : (maxDepth + 1),
@@ -191,7 +199,7 @@ async function actionRunner(context, action,  retryDepth = 0, maxDepth=2, error)
             await actionRunner(context, action, retryDepth, maxDepth, e);
             resolve();
           },
-          (10 * (retryDepth + 1)) * 1000    // 10 seconds
+          delay * 1000
       )
     });
   }
