@@ -10,4 +10,4 @@ Only the changes which are relevant to the individual student get synced to thei
 calendar is created for the plan, which then looks something like in the image below.
 ![Synced calendar on Google Calendar](https://i.imgur.com/SirZztp.png)
 
-The web app running in production can be found on [dbg-schedule-sync.web.app](https://dbg-schedule-sync.web.app).
+The web app running in production can be found on [dbg-vertretung.stubit.tv](https://dbg-vertretung.stubit.tv/).
