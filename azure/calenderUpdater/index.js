@@ -206,9 +206,17 @@ async function actionRunner(context, action,  retryDepth = 0, maxDepth=3, error)
 }
 
 async function rateLimiter(context, actions, limit=10) {
-  while (actions.length > 0) {
-      await Promise.all(actions.splice(0, limit).map(action => actionRunner(context, action)))
-  }
+  const processes = actions.splice(0, limit).map(action => (async () => {
+    while (action !== undefined) {
+      try {
+        await actionRunner(context, action);
+      } finally {
+        action = actions.pop();
+      }
+    }
+  })())
+
+  return Promise.all(processes);
 }
 
 async function getChanges(configRef, plan, context) {
