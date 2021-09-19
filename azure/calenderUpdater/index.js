@@ -1,33 +1,16 @@
 const { admin } = require("../admin")
 const {google} = require('googleapis')
 
-const {getApiDateString, getFirstReminderDiff} = require('../event')
-
-const religions = {
-  catholic: 'catholic',
-  evangelical: 'evangelical',
-  ethic: 'ethic'
-}
-
-const sportGroups = {
-  boys: 'boys',
-  girls: 'girls'
-}
-
-const profiles = {
-  science: 'science',
-  sport: 'sport',
-  latin: 'latin'
-}
-
 const credentials = require('./oauth_client.json').web
 
-const webAppName = 'dbg-schedule-sync'
-const webAppAddress = `https://${webAppName}.web.app/`
+const {getApiDateString, getFirstReminderDiff} = require('../event')
 
-function unknownSubjectAbbreviation(subject, context) {
-  context.log.warn(`Subject abbreviation unknown for "${subject}"`, {userUid: context.userUid})
-}
+const abbreviations = require('./abbreviation.json')
+const religions = require('./religions.json')
+const sportGroups = require('./sportGroups.json')
+const profiles = require('./profiles.json')
+
+const webAppAddress = process.env.WEBSITE_ADDRESS;
 
 function getReligionAbbreviation(config, course) {
   if (config.religion !== religions.ethic) {
@@ -36,13 +19,16 @@ function getReligionAbbreviation(config, course) {
     if (config.grade > 11) {
       let abbreviations = []
 
+      // noinspection JSUnresolvedVariable
       if(course.course_number === 1) {
         abbreviations = ['rel', `rel ${ending}`]
       } else if(ending === 'rk') {
         abbreviations = ['rel rk']
       }
 
+      // noinspection JSUnresolvedVariable
       abbreviations.push(`rel ${ending}${course.course_number}`)
+      // noinspection JSUnresolvedVariable
       abbreviations.push(`rel${course.course_number}`)
 
       if(course.main) {
@@ -59,107 +45,46 @@ function getReligionAbbreviation(config, course) {
 }
 
 function courseToStrings(config, course, context) {
-  let subject = course.id
+  const subject = course.id
+  let abbreviation;
+
   course = course.data()
 
+  // noinspection JSUnresolvedVariable
   if (course.main === null || course.course_number === null) {
     return []
   }
 
-  switch (subject) {
-    case 'art':
-      subject = 'bk'
-      break
-    case 'astronomy':
-      unknownSubjectAbbreviation(subject, context)
-      return []
-    case 'biology':
-      subject = 'bio'
-      break
-    case 'chemistry':
-      subject = 'ch'
-      break
-    case 'computer_science':
-      subject = 'inf'
-      break
-    case 'economy':
-      subject = 'wI'
-      break
-    case 'english':
-      subject = 'e'
-      break
-    case 'french':
-      subject = 'f'
-      break
-    case 'geography':
-      subject = 'geo'
-      break
-    case 'german':
-      subject = 'd'
-      break
-    case 'history':
-      subject = 'g'
-      break
-    case 'latin':
-      subject = 'l'
-      break
-    case 'literature':
-      subject = 'lit'
-      break
-    case 'math':
-      subject = 'm'
-      break
-    case 'music':
-      subject = 'mus'
-      break
-    case 'philosophy':
-      subject = 'phil'
-      break
-    case 'physics':
-      subject = 'ph'
-      break
-    case 'politics':
-      subject = 'gk'
-      break
-    case 'religion':
-      subject = getReligionAbbreviation(config, course);
+  if (subject === 'religion') {
+    abbreviation = getReligionAbbreviation(config, course);
 
-      if(typeof subject !== "string") {   // only Ethic needs further preparation
-        return subject
-      }
-      break;
+    if(typeof abbreviation !== "string") {   // only Ethic needs further preparation
+      return abbreviation
+    }
+  } else {
+    if(!(subject in abbreviations)) {
+      context.log.warn(`Unknown subject`, {subject, userUid: context.userUid})
+      return;
+    }
 
-    case 'psychology':
-      subject = 'psy'
-      break
-    case 'seminar':
-      subject = 'SF'
-      break
-    case 'sport':
-      subject = 'sp'
-      break
-    case 'theater':
-      subject = 'thea'
-      break
-    case 'vk_language':
-      unknownSubjectAbbreviation(subject, context)
+    abbreviation = abbreviations[subject];
+
+    if(abbreviation === null) {
+      context.log.warn(`Subject abbreviation unknown"`, {subject, userUid: context.userUid})
       return;
-    case 'vk_math':
-      unknownSubjectAbbreviation(subject, context)
-      return;
-    default:
-      context.log.warn(`Unknown subject "${course.id}"`)
-      return
+    }
   }
 
   if (course.main) {
-    subject = subject.toUpperCase()
+    abbreviation = abbreviation.toUpperCase()
   }
 
-  let courseStrings = [`${subject}${course.course_number}`]
+  // noinspection JSUnresolvedVariable
+  let courseStrings = [`${abbreviation}${course.course_number}`]
 
+  // noinspection JSUnresolvedVariable
   if (Number(course.course_number) === 1) {
-    courseStrings.push(subject)
+    courseStrings.push(abbreviation)
   }
 
   return courseStrings;
