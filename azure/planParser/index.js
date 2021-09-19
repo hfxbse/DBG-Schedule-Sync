@@ -190,6 +190,7 @@ module.exports = async function () {
   for (let i = 0; i < timetables.data.length; i++) {
     let table = timetables.data[i]
 
+    // noinspection JSCheckFunctionSignatures
     const website = HTMLParser.parse(await download(table.url, 'latin1'))
 
     let doc = db.collection('plans').doc(String(i + 1))

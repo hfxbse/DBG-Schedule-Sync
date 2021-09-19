@@ -1,0 +1,16 @@
+Hey {{ name }},
+
+wahrscheinlich bist du jetzt eine Klassenstufe weiter. So oder so,
+dein Stundenplan wird sich im neuen Schuljahr geändert haben.
+
+Damit weiterhin das Richte vom Vertretungsplan mit deinem Kalender
+synchronisiert wird, pass deine Einstellungen auf
+https://dbg-vertretung.stubit.tv ein. Nachdem du das gemacht hast,
+sollte alles wieder in Zukunft passen.
+
+Falls du den Vertretungsplan nicht mehr auf deinem Kalender haben
+möchtest, entferne einfach den Zugriff für uns auf deinen Kalender
+über https://myaccount.google.com/permissions.
+
+Viel Erfolg im neuen Schuljahr
+DBG Vertretungsplan Synchronisation

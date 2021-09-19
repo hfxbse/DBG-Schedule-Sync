@@ -1,0 +1,10 @@
+{
+  "bindings": [
+    {
+      "name": "SchoolYearStart",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "0 0 16 16 SEP *"
+    }
+  ]
+}

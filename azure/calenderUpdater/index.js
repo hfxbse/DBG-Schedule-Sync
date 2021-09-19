@@ -1,4 +1,4 @@
-const admin = require("../admin").admin
+const { admin } = require("../admin")
 const {google} = require('googleapis')
 
 const {getApiDateString, getFirstReminderDiff} = require('../event')
@@ -245,7 +245,7 @@ async function getChanges(configRef, plan, context) {
     let excludedSubjects = Object.values(religions).filter(
         religion => religion !== config.religion
     ).map(religion => {
-      return getReligionAbbreviation({grade: config.grade, religion: religion});
+      return getReligionAbbreviation({grade: config.grade, religion: religion})
     })
 
     if (config.religion === religions.ethic) {
@@ -331,7 +331,7 @@ async function updateWeekTypeEvent(api, calendarId, plan) {
   let startTime = new Date(plan.date.seconds * 1000)
   startTime.setDate(startTime.getDate() - startTime.getDay() + 1)
 
-  let endTime = new Date(new Date(startTime).setDate(startTime.getDate() + 5));
+  let endTime = new Date(new Date(startTime).setDate(startTime.getDate() + 5))
 
   let events = (await api.events.list({
     calendarId: calendarId,
