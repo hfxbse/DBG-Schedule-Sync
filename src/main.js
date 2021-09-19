@@ -29,12 +29,6 @@ const firestore = async () => {
   return firebase.firestore()
 }
 
-export function executeInProduction(callback) {
-  if (process.env.NODE_ENV === 'production') {
-    return callback();
-  }
-}
-
 let authDomain = process.env.VUE_APP_DOMAIN
 
 if (location.hostname === process.env.VUE_APP_ALT_DOMAIN) {
@@ -52,7 +46,31 @@ firebase.initializeApp({
   measurementId: process.env.VUE_APP_MEASUREMENT_ID,
 })
 
-import(/* webpackChunkName: "firebase_analytics"*/ 'firebase/analytics').then(() => firebase.analytics())
+import(/* webpackChunkName: "firebase_analytics"*/ 'firebase/analytics').then(() => {
+  const analytics = firebase.analytics();
+
+  window.addEventListener('error', function (event) {
+    const {message, filename, lineno, colno} = event;
+
+    console.error(event)
+
+    analytics.logEvent('exception', {
+      description: `Exception: ${message} in ${filename} at ${lineno}:${colno}`,
+      fatal: false,
+      ...event,
+    })
+  })
+
+  window.addEventListener('unhandledrejection', function (event) {
+    console.error(event)
+
+    analytics.logEvent('exception', {
+      description: `Rejected promise`,
+      fatal: false,
+      ...event.reason
+    })
+  })
+})
 
 firestore().then(() => {
   Vue.config.productionTip = false
