@@ -375,28 +375,22 @@ module.exports = async (context) => {
 
           try {
             calendarId = await getCalendarId(api, credentials, config.id)
-          } catch (error) {
-            let response = error.response
-
-            if (response.data.error.code === 403 || response.data.error === 'invalid_grant') {
-              delete credentials.refresh_token
-              await credentialsDoc.set(credentials)
-              return
-            } else {
-              // noinspection ExceptionCaughtLocallyJS
-              throw error;
-            }
-          }
-
-          try {
             await clearDay(current, api, calendarId, plan)
           } catch (error) {
             if (error.code === 404) {
               credentials.id = undefined
               calendarId = await getCalendarId(api, credentials, config.id)
             } else {
-              // noinspection ExceptionCaughtLocallyJS
-              throw error;
+              let response = error.response
+
+              if (response.data.error.code === 403 || response.data.error === 'invalid_grant') {
+                delete credentials.refresh_token
+                await credentialsDoc.set(credentials)
+                return
+              } else {
+                // noinspection ExceptionCaughtLocallyJS
+                throw error;
+              }
             }
           }
 
