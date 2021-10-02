@@ -1,0 +1,16 @@
+Hey {{ name }},
+
+es scheint so, als ob du bei der Anmeldung vergessen hast, Zugriff
+auf deinen Google Kalender für die Synchronisation des Vertretungsplans zu
+geben.
+
+Um dies zu beheben, melde dich erneut auf https://dbg-vertretung.stubit.tv
+an. Dabei aktivierst du die letzte Checkbox bei den Berechtigungen, nachdem
+du deinen Google Account ausgewählt hast. Danach sollte alles in Zukunft
+passen.
+
+Falls du bewusst die Zugriffsberechtigung für deinen Google Kalender entfernt
+hast, musst du nichts Weiteres tun. Dies ist dann die letzte E-Mail.
+
+Alles Gute
+DBG Vertretungsplan Synchronisation

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width,initial-scale=1.0" name="viewport">
+    <meta name="x-apple-disable-message-reformatting">
+    <title></title>
+    <style>
+        * {
+            font-family: sans-serif;
+        }
+
+        p {
+            line-height: 150%;
+        }
+
+        div, table:last-child {
+            max-width: 80ch;
+            padding: 0 1.25rem 2rem;
+        }
+
+        a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<table>
+    <tr>
+        <td>
+            <img
+                    style="height: 5rem; padding-right: 1rem; padding-top: 0.75rem;"
+                    alt="DBG Vetretungsplan Synchronsiation Logo"
+                    src="https://dbg-vertretung.stubit.tv/img/icons/android-chrome-192x192.png"
+            >
+        </td>
+        <td>
+            <h1>DBG Vertretungsplan Synchronsiation</h1>
+        </td>
+    </tr>
+</table>
+<div>
+    <p>Hey {{ name }},</p>
+    <p>
+        es scheint so, als ob du bei der Anmeldung vergessen hast, Zugriff
+        auf deinen Google Kalender für die Synchronisation des Vertretungsplans zu
+        geben.
+    </p>
+    <p>
+        Um dies zu beheben, melde dich erneut auf ein. Dabei aktivierst du die letzte
+        Checkbox bei den Berechtigungen, nachdem du deinen Google Account ausgewählt hast.
+        Danach sollte alles in Zukunft passen.
+    </p>
+    <a
+            style="
+                    background: hsla(0,0%,100%,0.9);
+                    padding: 0.5rem 1rem;
+                    box-shadow: 0 4px 4px rgba(51, 81, 187, 0.3);
+                    border-radius: 5rem;
+                    text-decoration: none;
+                    background: #3351bb;
+                    color: white;
+                    display: inline-block;
+                    margin: 0.5rem 0 1rem;
+                    font-weight: 600;
+                "
+            href="https://dbg-vertretung.stubit.tv"
+    >
+        Berechtigung erteilen
+    </a>
+    <p>
+        Falls du bewusst die Zugriffsberechtigung für deinen Google Kalender entfernt hast,
+        musst du nichts Weiteres tun. Dies ist dann die letzte E-Mail.
+    </p>
+</div>
+<table>
+    <tr><td><b>Alles Gute</b></td></tr>
+    <tr><td>DBG Vertretungsplan Synchronisation</td></tr>
+</table>
+</body>
+</html>

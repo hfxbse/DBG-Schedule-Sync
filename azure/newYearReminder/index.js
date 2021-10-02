@@ -14,7 +14,7 @@ const auth = admin.auth();
 async function sendEmails(recipients) {
   const template = {
     Template: {
-      TemplateName: process.env.AWS_EMAIL_TEMPLATE,
+      TemplateName: process.env.AWS_EMAIL_TEMPLATE_NEW_YEAR,
       SubjectPart: fs.readFileSync(__dirname + '/emailSubject.txt').toString(),
       TextPart: fs.readFileSync(__dirname + '/email.txt').toString(),
       HtmlPart: minify(fs.readFileSync(__dirname + '/email.html').toString(), {
@@ -53,7 +53,7 @@ async function sendEmails(recipients) {
         ReplacementTemplateData: JSON.stringify({name: recipient.name})
     })),
     Source: `DBG Vertretungsplan Synchronisation <${process.env.AWS_EMAIL_SOURCE}>`,
-    Template: process.env.AWS_EMAIL_TEMPLATE,
+    Template: process.env.AWS_EMAIL_TEMPLATE_NEW_YEAR,
     DefaultTemplateData: JSON.stringify({}),
   }).promise()
 }

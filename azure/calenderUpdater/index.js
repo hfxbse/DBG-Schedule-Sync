@@ -9,6 +9,7 @@ const abbreviations = require('./abbreviation.json')
 const religions = require('./religions.json')
 const sportGroups = require('./sportGroups.json')
 const profiles = require('./profiles.json')
+const {sendPermissionNotification} = require("./email");
 
 const webAppAddress = process.env.WEBSITE_ADDRESS;
 
@@ -344,6 +345,8 @@ function addChange(api, calendarId, change) {
   });
 }
 
+let auth;
+
 module.exports = async (context) => {
   const plans = (await db.collection('plans').get()).docs;
   const query_configs = (await db.collection('query_configs').get()).docs
@@ -384,8 +387,31 @@ module.exports = async (context) => {
               let response = error.response
 
               if (response.data.error.code === 403 || response.data.error === 'invalid_grant') {
-                delete credentials.refresh_token
-                await credentialsDoc.set(credentials)
+                context.log.info('Notifying user of missing permissions', {userUid: current.userUid})
+
+                try {
+                  try {
+                    if(auth === undefined) {
+                      auth = admin.auth();
+                    }
+
+                    await auth.revokeRefreshTokens(current.userUid);
+
+                    const user = await auth.getUser(current.userUid)
+                    await sendPermissionNotification({
+                      address: user.email,
+                      name: user.displayName.replace("​", "").trim()
+                    });
+                  } catch (e) {
+                    context.log.warn(e)
+                  }
+
+                  await oAuthClient.revokeToken(credentials.refresh_token)
+                } finally {
+                  delete credentials.refresh_token
+                  await credentialsDoc.set(credentials)
+                }
+
                 return
               } else {
                 // noinspection ExceptionCaughtLocallyJS
