@@ -43,7 +43,24 @@ export default {
         const authInstance = await auth()
         const functionsInstance = await functions()
 
-        let {data} = await functionsInstance.httpsCallable('oAuthHandler-googleOAuth')({auth_code: authCode})
+        const signIn = functionsInstance.httpsCallable('oAuthHandler-googleOAuth');
+
+        let data;
+
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          try {
+            data = (await signIn({auth_code: authCode})).data
+            break
+          } catch (e) {
+            analytics().then(analytics => analytics.logEvent('exception', {
+              ...e,
+              description: 'oAuthHandler unavailable',
+              fatal: false,
+            }))
+          }
+        }
+
 
         await this.$gAuth.signOut()
 
