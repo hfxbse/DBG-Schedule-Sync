@@ -105,7 +105,13 @@ function updatePlanInfo(doc, batch, website) {
   let elements = website.querySelector('.info')
 
   if (elements) {
-    elements.querySelectorAll('td').forEach(item => information.push(item.text))
+    elements.querySelectorAll('td').forEach(item => {
+      const info = item.text.trim();
+
+      if(!(/Vertretungsplan[:]? (Herr|Frau) \w+/i).test(info)) {
+        information.push(info);
+      }
+    })
   }
 
   batch.set(doc, {

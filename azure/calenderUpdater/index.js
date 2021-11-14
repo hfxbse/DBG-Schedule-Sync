@@ -306,10 +306,6 @@ function addDayInformation(context, api, calendarId, plan) {
   date.setDate(date.getDate() + 1)
 
   return rateLimiter(context, plan.information.map(entry => () => {
-    if (/^Vertretungsplan: /.test(entry)) {
-      return
-    }
-
     let parts = entry.split(/: +/)
 
     let event = {
