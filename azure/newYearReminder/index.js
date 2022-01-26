@@ -79,7 +79,8 @@ module.exports = async function (context) {
     recipients = recipients.filter(address => address !== undefined)
 
     if(recipients.length > 0) {
-      await sendEmails(recipients.filter(recipient => recipient !== undefined));
+      // TODO only send emails to mailbox simulator if not in production
+      // await sendEmails(recipients.filter(recipient => recipient !== undefined));
       return
     }
   }

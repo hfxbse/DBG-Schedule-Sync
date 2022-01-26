@@ -74,20 +74,20 @@
 </template>
 
 <script>
-import * as firebase from 'firebase/app'
 import Center from '@/components/Center';
 import OptionsButton from '@/components/OptionsButton';
 import ButtonContainer from '@/components/ButtonContainer';
 import SettingTitle from '@/components/SettingTitle';
 
-const firestore = async () => {
-  await import(/* webpackChunkName: "firebase_firestore"*/ 'firebase/firestore')
-  return firebase.firestore()
-}
+import {app, appOptions} from "@/main";
+import {getAnalytics, logEvent} from "firebase/analytics";
 
-const analytics = async () => {
-  await import(/* webpackChunkName: "firebase_firestore"*/ 'firebase/analytics')
-  return firebase.analytics()
+const firestore = async () => {
+  const firebase = (await import(/* webpackChunkName: "firebase_compat"*/ 'firebase/compat/app')).default;
+  await import(/* webpackChunkName: "firebase_compat"*/ 'firebase/compat/firestore');
+
+  firebase.initializeApp(appOptions);
+  return firebase.firestore();
 }
 
 const LowerGradeSettings = () => import('@/components/LowerGradeSettings');
@@ -119,21 +119,20 @@ export default {
     }
   },
   methods: {
-    log(eventName) {
-      analytics().then(analytics => analytics.logEvent(eventName));
+    log(eventName, parameter) {
+      const analyticsInstance = getAnalytics(app);
+      logEvent(analyticsInstance, eventName, parameter);
     },
     async getConfig() {
       let db = await firestore()
       return db.collection('query_configs').doc(this.user.uid)
     },
     async save() {
-      analytics().then(analytics => {
-        if((this.config ?? {}) === {}) {
-          analytics.logEvent('config_created')
-        }
+      if ((this.config ?? {}) === {}) {
+        this.log('config_created')
+      }
 
-        analytics.logEvent('save');
-      });
+      this.log('save');
 
       let doc = await this.getConfig()
       let config = {...this.configState};
@@ -204,7 +203,7 @@ export default {
       },
       set(value) {
         if (this.configState.grade === undefined) {
-          analytics().then(analytics => analytics.logEvent('config_start'))
+          this.log('config_start')
         }
 
         this.$set(this.configState, 'grade', Number(value))

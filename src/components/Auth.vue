@@ -9,27 +9,21 @@
 </template>
 
 <script>
-import * as firebase from 'firebase/app'
+import {app} from "@/main";
 
-const auth = async () => {
-  await import(/* webpackChunkName: "firebase_auth"*/ 'firebase/auth')
-  return firebase.auth()
-}
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithCredential,
+  getAdditionalUserInfo,
+} from "firebase/auth";
 
-const analytics = async () => {
-  await import(/* webpackChunkName: "firebase_auth"*/ 'firebase/analytics')
-  return firebase.analytics()
-}
+import {
+  getAnalytics,
+  logEvent
+} from "firebase/analytics"
 
-const functions = async () => {
-  await import(/* webpackChunkName: "firebase_functions"*/ 'firebase/functions')
-
-  if (location.hostname === 'localhost') {
-    firebase.functions().useFunctionsEmulator('http://localhost:5001');
-  }
-
-  return firebase.functions()
-}
+import {getFunctions, httpsCallable} from 'firebase/functions';
 
 export default {
   name: "Auth",
@@ -40,35 +34,37 @@ export default {
 
         this.working = true;
 
-        const authInstance = await auth()
-        const functionsInstance = await functions()
+        const analyticsInstance = getAnalytics(app);
+        const functionsInstance = getFunctions(app);
 
-        const signIn = functionsInstance.httpsCallable('oAuthHandler-googleOAuth');
+        const signIn = httpsCallable(functionsInstance, 'oAuthHandler-googleOAuth');
 
         let data;
-
         // eslint-disable-next-line no-constant-condition
         while (true) {
           try {
             data = (await signIn({auth_code: authCode})).data
             break
           } catch (e) {
-            analytics().then(analytics => analytics.logEvent('exception', {
+            logEvent(analyticsInstance, 'exception', {
               ...e,
               description: 'oAuthHandler unavailable',
               fatal: false,
-            }))
+            })
+
+            await new Promise(r => setTimeout(r, 2500));
           }
         }
 
-
         await this.$gAuth.signOut()
 
-        let credentials = new firebase.auth.GoogleAuthProvider().credential(data.id_token)
-        let user = await authInstance.signInWithCredential(credentials)
+        this.initAuth();
 
-        if(user.additionalUserInfo.isNewUser) {
-          analytics().then(analytics => analytics.logEvent('sign_up'));
+        let credentials = GoogleAuthProvider.credential(data.id_token)
+        let user = await signInWithCredential(this.authInstance, credentials)
+
+        if (getAdditionalUserInfo(user).isNewUser) {
+          logEvent(analyticsInstance, 'sign_up');
         }
 
         this.$emit('success')
@@ -81,12 +77,18 @@ export default {
       } finally {
         this.working = false;
       }
-    }
+    },
+    initAuth() {
+      if (this.authInstance === null) {
+        this.authInstance = getAuth(app);
+      }
+    },
   },
   data() {
     return {
       working: false,
-      missingCookies: false
+      missingCookies: false,
+      authInstance: null,
     }
   }
 }

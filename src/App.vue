@@ -86,18 +86,21 @@ a:first-child {
 
 <script>
 import Home from "@/views/Home";
-import firebase from "firebase/app";
 
-const analytics = async () => {
-  await import(/* webpackChunkName: "firebase_firestore"*/ 'firebase/analytics')
-  return firebase.analytics()
-}
+import {app} from "@/main";
+
+import {
+  getAnalytics,
+  logEvent
+} from "firebase/analytics";
+
 
 export default {
   components: {Home},
   methods: {
     log(eventName) {
-      analytics().then(analytics => analytics.logEvent(eventName));
+      const analyticsInstance = getAnalytics(app);
+      logEvent(analyticsInstance, eventName);
     }
   }
 }

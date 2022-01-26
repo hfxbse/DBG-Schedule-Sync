@@ -10,7 +10,9 @@
     />
 
     <center-container v-if="menuVisible" class="menu" @click.self="pendingSave = menuVisible = false">
-      <auth v-if="!user" @success="menuVisible = false"/>
+      <keep-alive>
+        <auth v-if="!user" @success="menuVisible = false"/>
+      </keep-alive>
     </center-container>
   </div>
   <center-container v-else>
@@ -20,23 +22,22 @@
 
 <script>
 import Setup from '@/components/Setup.vue'
-import Center from '@/components/Center';
-import * as firebase from 'firebase/app';
-import Auth from "@/components/Auth";
 
-const auth = async () => {
-  await import(/* webpackChunkName: "firebase_auth"*/ 'firebase/auth')
-  return firebase.auth()
-}
+import {app} from "@/main";
+import {getAuth, onAuthStateChanged, signOut} from "firebase/auth";
 
 export default {
   name: 'Home',
-  components: {Auth, centerContainer: Center, Setup},
+  components: {
+    Auth: () => import(/* webpackChunkName: "auth"*/ "@/components/Auth"),
+    CenterContainer: () => import(/* webpackChunkName: "auth"*/ "@/components/Center"),
+    Setup
+  },
   created() {
     document.ononline = () => this.online = true
     document.onoffline = () => this.online = false
 
-    auth().then(() => firebase.auth().onAuthStateChanged(user => this.user = user))
+    onAuthStateChanged(getAuth(app), user => this.user = user);
   },
   data() {
     return {
@@ -48,7 +49,7 @@ export default {
   },
   methods: {
     async logout() {
-      await (await auth()).signOut()
+      await signOut(getAuth(app));
     }
   },
   watch: {}

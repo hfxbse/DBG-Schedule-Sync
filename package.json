@@ -1,6 +1,6 @@
 {
   "name": "schedulesync",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -9,12 +9,12 @@
     "emulators": "firebase emulators:start"
   },
   "dependencies": {
-    "core-js": "^3.6.5",
-    "firebase": "^7.24.0",
-    "register-service-worker": "^1.7.1",
-    "vue": "^2.6.11",
-    "vue-google-oauth2": "^1.5.5",
-    "vuefire": "^2.2.4"
+    "core-js": "^3.20.3",
+    "firebase": "^9.6.4",
+    "register-service-worker": "^1.7.2",
+    "vue": "^2.6.14",
+    "vue-google-oauth2": "^1.5.8",
+    "vuefire": "^2.2.5"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
@@ -23,10 +23,10 @@
     "@vue/cli-plugin-router": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
     "babel-eslint": "^10.1.0",
-    "eslint": "^6.7.2",
+    "eslint": "^6.8.0",
     "eslint-plugin-vue": "^6.2.2",
     "lint-staged": "^9.5.0",
-    "vue-template-compiler": "^2.6.11"
+    "vue-template-compiler": "^2.6.14"
   },
   "eslintConfig": {
     "root": true,
