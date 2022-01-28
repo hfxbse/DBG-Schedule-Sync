@@ -23,15 +23,11 @@ pnpm-debug.log*
 *.sw?
 
 # Firebase
-/firestore-debug.log
-/ui-debug.log
 /.firebaserc
-/firebase-debug.log
+*log
+/.firebase/
 
 # Lock files
 *lock.json
-
-
-/.firebase/
 
 /public/privacy.pdf

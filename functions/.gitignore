@@ -5,3 +5,4 @@ node_modules/
 /web_client.json
 /changeKinds.json
 /firebase-debug.log
+/.runtimeconfig.json

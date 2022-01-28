@@ -1,23 +1,28 @@
-const {google} = require('googleapis')
+const {google} = require('googleapis');
 const functions = require('firebase-functions');
 
-const admin = require('firebase-admin')
-const firebase = require('firebase/app')
-require('firebase/auth')
+const admin = require('firebase-admin');
 
-const credentials = require('./oauth_client.json').web
-const webAppSettings = require('./web_client.json')
-
-firebase.initializeApp(webAppSettings)
+let firebase;
+let credentials;
+let webAppSettings;
 
 exports.googleOAuth = functions.https.onCall(async ({auth_code}) => {
+  firebase = require('firebase/app');
+  require('firebase/auth');
+
+  credentials = require('./oauth_client.json').web;
+  webAppSettings = require('./web_client.json');
+
+  firebase.initializeApp(webAppSettings);
+
   const client = new google.auth.OAuth2(
       credentials.client_id,
       credentials.client_secret,
       'postmessage'
-  )
+  );
 
-  const {tokens} = await client.getToken(auth_code)
+  const {tokens} = await client.getToken(auth_code);
 
   if (tokens.refresh_token) {
     const entry = {
