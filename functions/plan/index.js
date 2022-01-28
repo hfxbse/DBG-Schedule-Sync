@@ -1,3 +1,4 @@
 exports.plan = {
-  parser: require('./parser.js').parser
+  parser: require('./parser.js').parser,
+  calendarUpdater: require('./calendarUpdater')
 };

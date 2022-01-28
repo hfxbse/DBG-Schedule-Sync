@@ -1,5 +1,3 @@
-process.env.TZ = 'Europe/Berlin';
-
 const admin = require('firebase-admin');
 const serviceAccount = require('./service_account.json');
 
