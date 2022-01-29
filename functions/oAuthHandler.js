@@ -25,12 +25,6 @@ exports.googleOAuth = functions.region('europe-west1').https.onCall(async ({auth
   const {tokens} = await client.getToken(auth_code);
 
   if (tokens.refresh_token) {
-    const entry = {
-      google: {
-        refresh_token: tokens.refresh_token
-      }
-    };
-
     try {
       let credentials = new firebase.auth.GoogleAuthProvider().credential(tokens.id_token);
 
@@ -50,9 +44,11 @@ exports.googleOAuth = functions.region('europe-west1').https.onCall(async ({auth
     let doc = admin.firestore().collection('calendars').doc(userID);
 
     if ((await doc.get()).exists) {
-      await doc.update(entry);
+      await doc.update({"google.refresh_token": tokens.refresh_token});
     } else {
-      await doc.set(entry);
+      await doc.set({
+        google: {refresh_token: tokens.refresh_token}
+      });
     }
   }
 

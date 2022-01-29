@@ -14,14 +14,14 @@
   },
   "main": "index.js",
   "dependencies": {
-    "aws-sdk": "^2.991.0",
-    "dsbapi": "^4.0.4",
-    "firebase": "^8.0.2",
-    "firebase-admin": "^9.4.1",
-    "firebase-functions": "^3.6.1",
-    "googleapis": "^64.0.0",
+    "aws-sdk": "^2.1068.0",
+    "dsbapi": "^4.1.1",
+    "firebase": "^8.10.1",
+    "firebase-admin": "^10.0.2",
+    "firebase-functions": "^3.17.1",
+    "googleapis": "^94.0.0",
     "html-minifier": "^4.0.0",
-    "node-html-parser": "^1.3.1"
+    "node-html-parser": "^5.2.0"
   },
   "devDependencies": {
     "eslint": "^8.7.0",

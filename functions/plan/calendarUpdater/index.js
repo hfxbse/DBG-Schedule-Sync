@@ -451,7 +451,6 @@ function setup() {
   }
 }
 
-
 async function onConfigChange(config) {
   setup();
 
