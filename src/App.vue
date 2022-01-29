@@ -103,5 +103,5 @@ export default {
       logEvent(analyticsInstance, eventName);
     }
   }
-}
+};
 </script>

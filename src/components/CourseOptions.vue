@@ -38,8 +38,8 @@
   </div>
 </template>
 <script>
-import ButtonContainer from '@/components/ButtonContainer'
-import OptionsButton from '@/components/OptionsButton'
+import ButtonContainer from '@/components/ButtonContainer';
+import OptionsButton from '@/components/OptionsButton';
 
 export default {
   name: 'course-options',
@@ -75,7 +75,7 @@ export default {
   computed: {
     selectedType() {
       if (this.value && this.value.main !== null) {
-        return this.value.main ? 'Leistungskurs' : 'Basiskurs'
+        return this.value.main ? 'Leistungskurs' : 'Basiskurs';
       }
 
       return 'None';
@@ -84,18 +84,18 @@ export default {
       return this.value ? Number(this.value.course_number) : 0;
     },
     mainCourseDisabled() {
-      return this.mainCourseCount >= 3 && (!this.value || this.value.main !== true)
+      return this.mainCourseCount >= 3 && (!this.value || this.value.main !== true);
     }
   },
   methods: {
     update(key, value) {
-      let options = {...this.value}
-      this.$set(options, key, value)
+      let options = {...this.value};
+      this.$set(options, key, value);
 
-      this.$emit('input', options)
+      this.$emit('input', options);
     }
   }
-}
+};
 </script>
 <style scoped>
 h2 {

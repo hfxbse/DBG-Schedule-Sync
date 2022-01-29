@@ -71,21 +71,21 @@
 </template>
 
 <script>
-import OptionsButton from '@/components/OptionsButton'
-import ButtonContainer from '@/components/ButtonContainer'
-import SettingTitle from '@/components/SettingTitle'
-import {religionLessonTypes} from '@/components/Setup'
+import OptionsButton from '@/components/OptionsButton';
+import ButtonContainer from '@/components/ButtonContainer';
+import SettingTitle from '@/components/SettingTitle';
+import {religionLessonTypes} from '@/components/Setup';
 
 const profiles = [
   {display: 'NWT', value: 'science'},
   {display: 'Sport', value: 'sport'},
   {display: 'Latein', value: 'latin'}
-]
+];
 
 const sportGroups = [
   {display: 'Jungs', value: 'boys'},
   {display: 'Mädchens', value: 'girls'}
-]
+];
 
 export default {
   name: "LowerGradeSettings",
@@ -103,13 +103,13 @@ export default {
   },
   methods: {
     updateConfig(key, value) {
-      let copy = {...this.value}
-      copy[key] = value
+      let copy = {...this.value};
+      copy[key] = value;
 
-      this.$emit('input', copy)
+      this.$emit('input', copy);
     }
   }
-}
+};
 </script>
 
 <style scoped>

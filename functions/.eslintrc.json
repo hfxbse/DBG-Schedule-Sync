@@ -8,15 +8,16 @@
   ],
   "extends": "eslint:recommended",
   "rules": {
+    "semi": [
+      2,
+      "always"
+    ],
     // Removed rule "disallow the use of console" from recommended eslint rules
     "no-console": "off",
-
     // Removed rule "disallow multiple spaces in regular expressions" from recommended eslint rules
     "no-regex-spaces": "off",
-
     // Removed rule "disallow the use of debugger" from recommended eslint rules
     "no-debugger": "off",
-
     // Removed rule "disallow unused variables" from recommended eslint rules
     "no-unused-vars": "off",
 

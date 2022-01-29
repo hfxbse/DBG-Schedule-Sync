@@ -29,32 +29,32 @@ exports.googleOAuth = functions.region('europe-west1').https.onCall(async ({auth
       google: {
         refresh_token: tokens.refresh_token
       }
-    }
+    };
 
     try {
-      let credentials = new firebase.auth.GoogleAuthProvider().credential(tokens.id_token)
+      let credentials = new firebase.auth.GoogleAuthProvider().credential(tokens.id_token);
 
       if (process.env.FIRESTORE_EMULATOR_HOST) {
-        firebase.auth().useEmulator('http://localhost:9099/')
+        firebase.auth().useEmulator('http://localhost:9099/');
       }
 
-      await firebase.auth().signInWithCredential(credentials)
+      await firebase.auth().signInWithCredential(credentials);
     } catch (error) {
       // TODO get correct function error code
-      throw new functions.https.HttpsError('unknown', `${error.message} [${error.code}]`)
+      throw new functions.https.HttpsError('unknown', `${error.message} [${error.code}]`);
     }
 
-    const userID = firebase.auth().currentUser.uid
-    await firebase.auth().signOut()
+    const userID = firebase.auth().currentUser.uid;
+    await firebase.auth().signOut();
 
-    let doc = admin.firestore().collection('calendars').doc(userID)
+    let doc = admin.firestore().collection('calendars').doc(userID);
 
     if ((await doc.get()).exists) {
-      await doc.update(entry)
+      await doc.update(entry);
     } else {
-      await doc.set(entry)
+      await doc.set(entry);
     }
   }
 
-  return {id_token: tokens.id_token}
+  return {id_token: tokens.id_token};
 });

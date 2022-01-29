@@ -72,11 +72,11 @@
 </template>
 
 <script>
-import SettingTitle from '@/components/SettingTitle'
-import CourseOptions from '@/components/CourseOptions'
-import ButtonContainer from '@/components/ButtonContainer'
-import OptionsButton from '@/components/OptionsButton'
-import {religionLessonTypes} from '@/components/Setup'
+import SettingTitle from '@/components/SettingTitle';
+import CourseOptions from '@/components/CourseOptions';
+import ButtonContainer from '@/components/ButtonContainer';
+import OptionsButton from '@/components/OptionsButton';
+import {religionLessonTypes} from '@/components/Setup';
 
 export default {
   name: "CourseSelection",
@@ -100,36 +100,36 @@ export default {
       return this.religion !== undefined && this.religion !== '';
     },
     visibleRequiredCourses() {
-      let visible = {}
-      let subjects = Object.keys(this.requiredCourses)
+      let visible = {};
+      let subjects = Object.keys(this.requiredCourses);
 
       subjects.forEach((subject, index) => {
         if (index !== 0) {
           let previousCourse = this.value[subjects[index - 1]];
-          if(previousCourse && previousCourse.course_number) {
-            this.$set(visible, subject, this.requiredCourses[subject])
+          if (previousCourse && previousCourse.course_number) {
+            this.$set(visible, subject, this.requiredCourses[subject]);
           }
         } else {
-          this.$set(visible, subject, this.requiredCourses[subject])
+          this.$set(visible, subject, this.requiredCourses[subject]);
         }
-      })
+      });
 
-      return visible
+      return visible;
     },
     lastRequiredSelected() {
-      let subjectIDs = Object.keys(this.requiredCourses)
-      let lastRequired = this.value[subjectIDs[subjectIDs.length - 1]]
+      let subjectIDs = Object.keys(this.requiredCourses);
+      let lastRequired = this.value[subjectIDs[subjectIDs.length - 1]];
 
-      return this.value && lastRequired && lastRequired.course_number
+      return this.value && lastRequired && lastRequired.course_number;
     },
     religionLessonTypes: () => religionLessonTypes
   },
   methods: {
     update(key, value) {
-      let newValues = {...this.value}
-      this.$set(newValues, key, value)
+      let newValues = {...this.value};
+      this.$set(newValues, key, value);
 
-      this.$emit('input', newValues)
+      this.$emit('input', newValues);
     }
   },
   data() {
@@ -163,9 +163,9 @@ export default {
         psychology: 'Psychologie',
         astronomy: 'Astronomie'
       }
-    }
+    };
   }
-}
+};
 </script>
 
 <style scoped>

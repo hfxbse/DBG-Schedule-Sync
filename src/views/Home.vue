@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import Setup from '@/components/Setup.vue'
+import Setup from '@/components/Setup.vue';
 
 import {app} from "@/main";
 import {getAuth, onAuthStateChanged, signOut} from "firebase/auth";
@@ -34,8 +34,8 @@ export default {
     Setup
   },
   created() {
-    document.ononline = () => this.online = true
-    document.onoffline = () => this.online = false
+    document.ononline = () => this.online = true;
+    document.onoffline = () => this.online = false;
 
     onAuthStateChanged(getAuth(app), user => this.user = user);
   },
@@ -45,7 +45,7 @@ export default {
       user: null,
       menuVisible: false,
       pendingSave: false,
-    }
+    };
   },
   methods: {
     async logout() {
@@ -53,7 +53,7 @@ export default {
     }
   },
   watch: {}
-}
+};
 </script>
 
 <style scoped>

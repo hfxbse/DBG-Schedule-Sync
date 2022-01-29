@@ -1,22 +1,22 @@
-import Vue from 'vue'
+import Vue from 'vue';
 
-import App from '@/App.vue'
+import App from '@/App.vue';
 
-import GAuth from 'vue-google-oauth2'
+import GAuth from 'vue-google-oauth2';
 
-import '@/registerServiceWorker'
+import '@/registerServiceWorker';
 
 import {initializeApp} from "firebase/app";
 import {getAnalytics, logEvent} from "firebase/analytics";
 
 import {firestorePlugin as vuefire} from "vuefire";
 
-Vue.use(vuefire)
+Vue.use(vuefire);
 
-let authDomain = process.env.VUE_APP_DOMAIN
+let authDomain = process.env.VUE_APP_DOMAIN;
 
 if (location.hostname === process.env.VUE_APP_ALT_DOMAIN) {
-  authDomain = process.env.VUE_APP_ALT_DOMAIN
+  authDomain = process.env.VUE_APP_ALT_DOMAIN;
 }
 
 export const appOptions = {
@@ -30,7 +30,7 @@ export const appOptions = {
   measurementId: process.env.VUE_APP_MEASUREMENT_ID,
 };
 
-export const app = initializeApp(appOptions)
+export const app = initializeApp(appOptions);
 
 async function debugSetup() {
   if (location.hostname === 'localhost') {
@@ -49,7 +49,7 @@ async function debugSetup() {
 window.addEventListener('error', function (event) {
   const {message, filename, lineno, colno} = event;
 
-  console.error(event)
+  console.error(event);
 
   const analyticsInstance = getAnalytics(app);
 
@@ -57,11 +57,11 @@ window.addEventListener('error', function (event) {
     description: `Exception: ${message} in ${filename} at ${lineno}:${colno}`,
     fatal: false,
     ...event,
-  })
-})
+  });
+});
 
 window.addEventListener('unhandledrejection', function (event) {
-  console.error(event)
+  console.error(event);
 
   const analyticsInstance = getAnalytics(app);
 
@@ -69,17 +69,17 @@ window.addEventListener('unhandledrejection', function (event) {
     description: `Rejected promise`,
     fatal: false,
     ...event.reason
-  })
-})
+  });
+});
 
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
 
 Vue.use(GAuth, {
   clientId: process.env.VUE_APP_GOOGLE_OAUTH_CLIENT_ID,
   fetch_basic_profile: true,
   ux_mode: 'redirect',
   scope: 'https://www.googleapis.com/auth/calendar',
-})
+});
 
 new Vue({
   render: h => h(App),

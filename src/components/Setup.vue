@@ -24,7 +24,7 @@
             href="https://imgur.com/SirZztp"
             target="_blank"
             @auxclick="log('visit_preview')"
-           @click="log('visit_preview')">
+            @click="log('visit_preview')">
           hier
         </a>
         aus.
@@ -88,7 +88,7 @@ const firestore = async () => {
 
   firebase.initializeApp(appOptions);
   return firebase.firestore();
-}
+};
 
 const LowerGradeSettings = () => import('@/components/LowerGradeSettings');
 const CourseSelection = () => import('@/components/CourseSelection');
@@ -97,7 +97,7 @@ export const religionLessonTypes = [
   {display: 'Evangelisch', value: 'evangelical'},
   {display: 'Katholisch', value: 'catholic'},
   {display: 'Ethik', value: 'ethic'}
-]
+];
 
 export default {
   name: "Setup",
@@ -124,24 +124,24 @@ export default {
       logEvent(analyticsInstance, eventName, parameter);
     },
     async getConfig() {
-      let db = await firestore()
-      return db.collection('query_configs').doc(this.user.uid)
+      let db = await firestore();
+      return db.collection('query_configs').doc(this.user.uid);
     },
     async save() {
       if ((this.config ?? {}) === {}) {
-        this.log('config_created')
+        this.log('config_created');
       }
 
       this.log('save');
 
-      let doc = await this.getConfig()
+      let doc = await this.getConfig();
       let config = {...this.configState};
 
       ['grade', 'class', 'profile', 'sport', 'religion'].forEach(key => {
         if (config[key] === undefined) {
-          config[key] = null
+          config[key] = null;
         }
-      })
+      });
 
       doc.set({
         grade: Number(config.grade),
@@ -152,46 +152,46 @@ export default {
       });
 
       if (config.grade > 11) {
-        let db = await firestore()
+        let db = await firestore();
         let batch = db.batch();
 
-        let courses = Object.keys(this.courses)
+        let courses = Object.keys(this.courses);
 
         courses.forEach((course) => {
-          batch.set(doc.collection('courses').doc(course), this.courses[course])
-        })
+          batch.set(doc.collection('courses').doc(course), this.courses[course]);
+        });
 
-        batch.commit().then(() => this.coursesState = undefined)
+        batch.commit().then(() => this.coursesState = undefined);
       }
     },
     compareCourseOptions(current, old) {
-      current = {...current}
-      old = {...old}
+      current = {...current};
+      old = {...old};
 
-      current = this.nullToUndefined(current)
+      current = this.nullToUndefined(current);
 
-      return current.main !== old.main || (current.main !== null && current.course_number !== old.course_number)
+      return current.main !== old.main || (current.main !== null && current.course_number !== old.course_number);
     },
     nullToUndefined(object) {
       Object.keys(object).forEach(key => {
         if (object[key] === null) {
           object[key] = undefined;
         }
-      })
+      });
 
-      return object
+      return object;
     },
     actualCourse(course, requireNumber) {
       if (typeof requireNumber !== "boolean") {
-        requireNumber = true
+        requireNumber = true;
       }
 
       let selected = course.main !== undefined && course.main !== null;
-      return requireNumber ? selected && course.course_number : selected
+      return requireNumber ? selected && course.course_number : selected;
     },
     rawCoursesToMap(raw) {
-      let courses = {}
-      raw.forEach(course => this.$set(courses, course.id, course))
+      let courses = {};
+      raw.forEach(course => this.$set(courses, course.id, course));
 
       return courses;
     }
@@ -199,14 +199,14 @@ export default {
   computed: {
     gradeProxy: {
       get() {
-        return this.configState.grade
+        return this.configState.grade;
       },
       set(value) {
         if (this.configState.grade === undefined) {
-          this.log('config_start')
+          this.log('config_start');
         }
 
-        this.$set(this.configState, 'grade', Number(value))
+        this.$set(this.configState, 'grade', Number(value));
       }
     },
     validInput() {
@@ -214,40 +214,40 @@ export default {
       let grade = config.grade;
 
       if (grade && grade < 12) {
-        let valid = config.class && config.religion
+        let valid = config.class && config.religion;
 
         if (grade < 8) {
-          return valid && config.sport
+          return valid && config.sport;
         } else if (grade < 12) {
-          valid = valid && config.profile
-          return valid && (config.profile !== 'sport' && config.sport || config.profile === 'sport')
+          valid = valid && config.profile;
+          return valid && (config.profile !== 'sport' && config.sport || config.profile === 'sport');
         }
       } else if (grade > 11) {
-        let hasRequired = this.courses.religion && this.courses.religion.course_number && this.mainCourseCount === 3
+        let hasRequired = this.courses.religion && this.courses.religion.course_number && this.mainCourseCount === 3;
 
         let courseNumbersSelected = !Object.keys(this.courses).some(course => {
-          course = this.courses[course]
-          let number = course.course_number
-          return (number === undefined || number === null) && typeof course.main === 'boolean'
-        })
+          course = this.courses[course];
+          let number = course.course_number;
+          return (number === undefined || number === null) && typeof course.main === 'boolean';
+        });
 
-        return hasRequired && courseNumbersSelected
+        return hasRequired && courseNumbersSelected;
       }
 
       return false;
     },
     modified() {
-      let keys = Object.keys(this.configState)
-      let lowerGradeChanged = !this.config || keys.some(key => this.config[key] !== this.configState[key])
+      let keys = Object.keys(this.configState);
+      let lowerGradeChanged = !this.config || keys.some(key => this.config[key] !== this.configState[key]);
 
       let newCourses = Object.keys(this.courses);
 
-      newCourses = newCourses.filter(course => this.actualCourse(this.courses[course], false))
+      newCourses = newCourses.filter(course => this.actualCourse(this.courses[course], false));
       let actualOldCourses = this.actualOldCourses;
 
       let upperGradeChanged = newCourses.length !== actualOldCourses.length || actualOldCourses.some(old => {
         let current = this.courses[old.id];
-        return !current || this.compareCourseOptions(current, old)
+        return !current || this.compareCourseOptions(current, old);
       });
 
       return lowerGradeChanged || upperGradeChanged;
@@ -265,34 +265,34 @@ export default {
     },
     mainCourseCount() {
       let count = 0;
-      let subjects = Object.keys(this.courses)
+      let subjects = Object.keys(this.courses);
 
-      subjects.forEach(subject => count += Boolean(this.courses[subject].main))
+      subjects.forEach(subject => count += Boolean(this.courses[subject].main));
 
       return count;
     },
     oldCourses() {
-      return this.rawCoursesToMap(this.rawCourses)
+      return this.rawCoursesToMap(this.rawCourses);
     }
   },
   watch: {
     config(current, old) {
       if (!current) {
-        return
+        return;
       }
 
-      current.grade = Number(current.grade)
+      current.grade = Number(current.grade);
 
       if ((!old || !old.grade) && current) {
         this.configState = {...current};
       } else {
-        let keys = Object.keys(this.configState)
+        let keys = Object.keys(this.configState);
 
         keys.forEach((key) => {
           if (this.configState[key] === old[key]) {
             this.$set(this.configState, key, key !== 'grade' ? current[key] : Number(current[key]));
           }
-        })
+        });
       }
     },
     oldCourses(current, old) {
@@ -300,29 +300,29 @@ export default {
         this.coursesState = undefined;
       } else if (this.coursesState && old && current) {
         Object.keys(current).forEach(c => {
-          c = current[c]
+          c = current[c];
 
           let id = c.id;
 
-          let o = {...old[id]}
-          let state = {...this.coursesState[id]}
+          let o = {...old[id]};
+          let state = {...this.coursesState[id]};
 
-          o = this.nullToUndefined(o)
-          state = this.nullToUndefined(state)
+          o = this.nullToUndefined(o);
+          state = this.nullToUndefined(state);
 
 
           if (this.coursesState[id] !== undefined) {
             if (state.main === o.main) {
-              this.$set(this.coursesState[id], 'main', c.main)
+              this.$set(this.coursesState[id], 'main', c.main);
             }
 
             if (state.course_number === o.course_number) {
-              this.$set(this.coursesState[id], 'course_number', Number(c.course_number))
+              this.$set(this.coursesState[id], 'course_number', Number(c.course_number));
             }
           } else {
-            this.$set(this.coursesState, id, c)
+            this.$set(this.coursesState, id, c);
           }
-        })
+        });
       }
     },
     user: {
@@ -332,22 +332,22 @@ export default {
           let db = await firestore();
 
           if (this.validInput && this.modified && this.pendingSave) {
-            await this.save()
-            this.$emit('saved')
+            await this.save();
+            this.$emit('saved');
           }
 
-          this.$bind('config', db.collection('query_configs').doc(user.uid))
+          this.$bind('config', db.collection('query_configs').doc(user.uid));
           this.$bind(
               'rawCourses',
               db.collection('query_configs').doc(user.uid).collection('courses')
-          )
+          );
         } else if (!user && oldUser) {
           this.$unbind('config', () => {
-          })
-          this.$unbind('rawCourses', () => [])
-          this.coursesState = {}
+          });
+          this.$unbind('rawCourses', () => []);
+          this.coursesState = {};
 
-          this.configState = {}
+          this.configState = {};
         }
       }
     }
@@ -360,9 +360,9 @@ export default {
       config: {},
       coursesState: undefined,
       rawCourses: [],
-    }
+    };
   }
-}
+};
 </script>
 
 <style scoped>

@@ -7,7 +7,7 @@
 <script>
 export default {
   name: "ButtonContainer",
-}
+};
 </script>
 
 <style scoped>

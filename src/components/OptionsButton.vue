@@ -49,14 +49,14 @@ export default {
     input($event) {
       let value = null;
 
-      if($event.target.checked) {
-        value = $event.target.value
+      if ($event.target.checked) {
+        value = $event.target.value;
       }
 
-      this.$emit('input', value)
+      this.$emit('input', value);
     }
   }
-}
+};
 </script>
 
 <style scoped>

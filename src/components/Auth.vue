@@ -21,7 +21,7 @@ import {
 import {
   getAnalytics,
   logEvent
-} from "firebase/analytics"
+} from "firebase/analytics";
 
 import {getFunctions, httpsCallable} from 'firebase/functions';
 
@@ -43,34 +43,34 @@ export default {
         // eslint-disable-next-line no-constant-condition
         while (true) {
           try {
-            data = (await signIn({auth_code: authCode})).data
-            break
+            data = (await signIn({auth_code: authCode})).data;
+            break;
           } catch (e) {
             logEvent(analyticsInstance, 'exception', {
               ...e,
               description: 'oAuthHandler unavailable',
               fatal: false,
-            })
+            });
 
             await new Promise(r => setTimeout(r, 2500));
           }
         }
 
-        await this.$gAuth.signOut()
+        await this.$gAuth.signOut();
 
         this.initAuth();
 
-        let credentials = GoogleAuthProvider.credential(data.id_token)
-        let user = await signInWithCredential(this.authInstance, credentials)
+        let credentials = GoogleAuthProvider.credential(data.id_token);
+        let user = await signInWithCredential(this.authInstance, credentials);
 
         if (getAdditionalUserInfo(user).isNewUser) {
           logEvent(analyticsInstance, 'sign_up');
         }
 
-        this.$emit('success')
+        this.$emit('success');
       } catch (e) {
         if (e === false) {
-          this.missingCookies = true
+          this.missingCookies = true;
         } else {
           throw e;
         }
@@ -89,9 +89,9 @@ export default {
       working: false,
       missingCookies: false,
       authInstance: null,
-    }
+    };
   }
-}
+};
 </script>
 
 <style scoped>
