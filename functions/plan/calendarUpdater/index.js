@@ -485,6 +485,7 @@ async function onConfigChange(config) {
 }
 
 exports.schedule = functions
+    .region('europe-west1')
     .runWith({timeoutSeconds: 540})
     .pubsub.schedule("12 0,9,15 * * *").timeZone('Europe/Berlin')
     .onRun(async () => {
@@ -506,7 +507,10 @@ exports.schedule = functions
       }
     });
 
-const configListener = functions.runWith({timeoutSeconds: 300}).firestore.document('query_configs/{docId}');
+const configListener = functions
+    .region('europe-west1')
+    .runWith({timeoutSeconds: 300})
+    .firestore.document('query_configs/{docId}');
 
 exports.onConfigCreate = configListener.onCreate(onConfigChange);
 exports.onConfigUpdate = configListener.onUpdate((change => onConfigChange(change.after)));

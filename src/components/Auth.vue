@@ -35,7 +35,7 @@ export default {
         this.working = true;
 
         const analyticsInstance = getAnalytics(app);
-        const functionsInstance = getFunctions(app);
+        const functionsInstance = getFunctions(app, 'europe-west1');
 
         const signIn = httpsCallable(functionsInstance, 'oAuthHandler-googleOAuth');
 

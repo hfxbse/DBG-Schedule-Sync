@@ -7,7 +7,7 @@ let firebase;
 let credentials;
 let webAppSettings;
 
-exports.googleOAuth = functions.https.onCall(async ({auth_code}) => {
+exports.googleOAuth = functions.region('europe-west1').https.onCall(async ({auth_code}) => {
   firebase = require('firebase/app');
   require('firebase/auth');
 

@@ -188,7 +188,11 @@ async function updateEntries(doc, batch, website, planDate) {
   });
 }
 
-exports.parser = functions.pubsub.schedule('10 9,15 * * 1-5').timeZone('Europe/Berlin').onRun(async () => {
+const functionOptions = functions
+    .region('europe-west1')
+    .pubsub.schedule('10 9,15 * * 1-5').timeZone('Europe/Berlin');
+
+exports.parser = functionOptions.onRun(async () => {
   https = require('https');
   HTMLParser = require('node-html-parser');
 

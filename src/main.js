@@ -40,7 +40,9 @@ async function debugSetup() {
 
     connectAuthEmulator(getAuth(app), "http://localhost:9099");
     connectFirestoreEmulator(getFirestore(app), 'localhost', 8000);
-    connectFunctionsEmulator(getFunctions(app), 'localhost', 5001);
+    connectFunctionsEmulator(getFunctions(app, 'europe-west1'), 'localhost', 5001);
+
+    console.log('Connected to Firebase Emulator');
   }
 }
 

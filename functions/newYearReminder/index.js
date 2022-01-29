@@ -63,8 +63,11 @@ async function sendEmails(config, recipients) {
     DefaultTemplateData: JSON.stringify({}),
   }).promise();
 }
+const functionOptions = functions
+    .region('europe-west1')
+    .pubsub.schedule('0 17 16 SEP *').timeZone('Europe/Berlin');
 
-exports.new_year_reminder = functions.pubsub.schedule('0 17 16 SEP *').timeZone('Europe/Berlin').onRun(async () => {
+exports.new_year_reminder = functionOptions.onRun(async () => {
   AWS = require('aws-sdk');
   admin = require('firebase-admin');
 
