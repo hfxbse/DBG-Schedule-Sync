@@ -451,6 +451,39 @@ function setup() {
   }
 }
 
+
+async function onConfigChange(config) {
+  setup();
+
+  // config reference needs to be recreated for the admin ask, as else it will not use the required permissions somehow
+  const adminConfig = db.collection('query_configs').doc(config.id);
+  const changeIdentifier = {userUid: config.id, updateTime: config.updateTime.toDate()};
+
+  functions.logger.debug(`Debouncing config changes`, changeIdentifier);
+
+  for (let i = 0; i < 40; i++) {  // each iteration is one second apart
+    // eslint-disable-next-line no-await-in-loop
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // eslint-disable-next-line no-await-in-loop
+    if ((await adminConfig.get()).updateTime.toDate() > config.updateTime.toDate()) {
+      functions.logger.info(
+          `Configuration changed again before debounce delay did run out, exiting.`,
+          changeIdentifier
+      );
+
+      return;
+    }
+  }
+
+  const plans = (await db.collection('plans').get()).docs;
+
+  for (let snapshot of plans) {
+    // eslint-disable-next-line no-await-in-loop
+    await updateCalendar({snapshot, data: snapshot.data()}, await adminConfig.get());
+  }
+}
+
 exports.schedule = functions
     .runWith({timeoutSeconds: 540})
     .pubsub.schedule("12 0,9,15 * * *").timeZone('Europe/Berlin')
@@ -472,3 +505,8 @@ exports.schedule = functions
         );
       }
     });
+
+const configListener = functions.runWith({timeoutSeconds: 300}).firestore.document('query_configs/{docId}');
+
+exports.onConfigCreate = configListener.onCreate(onConfigChange);
+exports.onConfigUpdate = configListener.onUpdate((change => onConfigChange(change.after)));
