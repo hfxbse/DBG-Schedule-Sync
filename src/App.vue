@@ -82,6 +82,10 @@ a:first-child {
 
   border-right: 1px solid black;
 }
+
+a:first-child, a:last-child > :last-child {
+  margin-top: 0.075rem;
+}
 </style>
 
 <script>
