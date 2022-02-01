@@ -116,6 +116,10 @@ async function actionRunner(context, action, retryDepth = 0, maxDepth = 3, error
   try {
     await action();
   } catch (e) {
+    if ((e?.response?.data?.error?.errors ?? [])[0]?.reason !== 'rateLimitExceeded') {
+      throw e;
+    }
+
     const delay = 12 * (retryDepth + 1) + randomBetween(0, 8);
 
     functions.logger.warn(`Rate limit exceeded, waiting ${delay} seconds before retrying`, {
@@ -386,7 +390,8 @@ async function updateCalendar(plan, config) {
       calendarId = await getCalendarId(api, credentials, userUid);
       await clearDay(createContext(userUid, 'clearDay'), api, calendarId, plan.data);
     } catch (error) {
-      if (error.code === 404) {
+      if (error.code === 404 || error.code === 410) {
+        // TODO inform user on how to delete their account if they did not delete the calendar by accident
         credentials.id = undefined;
         calendarId = await getCalendarId(api, credentials, userUid);
       } else {
