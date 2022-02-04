@@ -372,7 +372,7 @@ async function updateCalendar(plan, config) {
 
   try {
     let credentialsDoc = db.collection('calendars').doc(userUid);
-    let credentials = (await credentialsDoc.get()).data().google;
+    let credentials = (await credentialsDoc.get()).data()?.google;
 
     if (credentials === undefined || credentials.refresh_token === undefined) {
       return;
@@ -468,9 +468,18 @@ async function onConfigChange(config) {
   for (let i = 0; i < 40; i++) {  // each iteration is one second apart
     // eslint-disable-next-line no-await-in-loop
     await new Promise(resolve => setTimeout(resolve, 1000));
+    // eslint-disable-next-line no-await-in-loop
+    let current = await adminConfig.get();
 
     // eslint-disable-next-line no-await-in-loop
-    if ((await adminConfig.get()).updateTime.toDate() > config.updateTime.toDate()) {
+    if (!current.exists) {
+      functions.logger.info(
+          `Configuration got deleted while debouncing, exiting.`,
+          changeIdentifier
+      );
+
+      return;
+    } else if (current.updateTime?.toDate() > config.updateTime.toDate()) {
       functions.logger.info(
           `Configuration changed again before debounce delay did run out, exiting.`,
           changeIdentifier

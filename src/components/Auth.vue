@@ -1,10 +1,16 @@
 <template>
   <div>
-    <button :class="{button: true, working}" @click="authWithGoogle">
-      <img alt="Google Icon" src="@/assets/Google.svg">
-      <span>{{ working ? "Anmeldung mit Google läuft" : "Anmelden mit Google" }}</span>
-    </button>
-    <p v-if="missingCookies" class="error">Drittanbieter-Cookies müssen zum anmelden aktiviert sein.</p>
+    <settings-button
+        :class="{googleAuth: true, working}"
+        :image="{
+          src: require('@/assets/Google.svg'),
+          alt: 'Google logo'
+        }"
+        :lable="working ? 'Anmeldung mit Google läuft' : 'Anmelden mit Google'"
+        :text-style="textStyle"
+        @click="authWithGoogle"
+    />
+    <error-message v-model="missingCookies" message="Drittanbieter-Cookies müssen zum anmelden aktiviert sein."/>
   </div>
 </template>
 
@@ -24,9 +30,12 @@ import {
 } from "firebase/analytics";
 
 import {getFunctions, httpsCallable} from 'firebase/functions';
+import SettingsButton from "@/components/SettingsButton";
+import ErrorMessage from "@/components/ErrorMessage";
 
 export default {
   name: "Auth",
+  components: {ErrorMessage, SettingsButton},
   methods: {
     async authWithGoogle() {
       try {
@@ -84,6 +93,15 @@ export default {
       }
     },
   },
+  computed: {
+    textStyle() {
+      return !this.working ? {} : {
+        "font-style": "italic",
+        "font-weight": 300,
+        "padding-right": "0.5rem",
+      };
+    }
+  },
   data() {
     return {
       working: false,
@@ -93,51 +111,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-.button {
-  padding: 0.75rem;
-  outline: none;
-
-  width: 17.5rem;
-
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-
-  box-shadow: var(--element-shadow);
-  border: none;
-  border-radius: 1.75rem;
-
-  background: white;
-}
-
-img {
-  height: 1.5rem;
-  width: 1.5rem;
-  margin-right: .5rem;
-}
-
-span {
-  margin: auto;
-  padding-right: 1.5rem;
-  font-weight: 500;
-  font-size: 1rem;
-}
-
-.working span {
-  font-style: italic;
-  font-weight: 300;
-  padding-right: 0.5rem;
-}
-
-.error {
-  color: red;
-  font-weight: 500;
-  text-align: center;
-
-  margin-top: 1rem;
-  width: 17.5rem;
-
-}
-</style>

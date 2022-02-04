@@ -7,6 +7,8 @@ if (!process.env.FIREBASE_DEBUG_MODE) {
   admin.initializeApp({projectId: 'dbg-schedule-sync'});
 }
 
+exports.users = require('./users').users;
+
 exports.oAuthHandler = require('./oAuthHandler');
 
 exports.plan = require('./plan').plan;

@@ -1,7 +1,8 @@
 <template>
   <div v-if="online">
-    <button v-if="user" @click="logout">Ausloggen</button>
+    <button v-if="user" @click="menuVisible = true">Einstellungen</button>
     <button v-else @click="menuVisible = true">Einloggen</button>
+
     <setup
         :pendingSave="pendingSave"
         :user="user"
@@ -12,6 +13,7 @@
     <center-container v-if="menuVisible" class="menu" @click.self="pendingSave = menuVisible = false">
       <keep-alive>
         <auth v-if="!user" @success="menuVisible = false"/>
+        <settings v-else @close="menuVisible = false"/>
       </keep-alive>
     </center-container>
   </div>
@@ -24,11 +26,12 @@
 import Setup from '@/components/Setup.vue';
 
 import {app} from "@/main";
-import {getAuth, onAuthStateChanged, signOut} from "firebase/auth";
+import {getAuth, onAuthStateChanged} from "firebase/auth";
 
 export default {
   name: 'Home',
   components: {
+    Settings: () => import(/* webpackChunkName: "settings"*/ "@/components/Settings"),
     Auth: () => import(/* webpackChunkName: "auth"*/ "@/components/Auth"),
     CenterContainer: () => import(/* webpackChunkName: "auth"*/ "@/components/Center"),
     Setup
@@ -39,6 +42,12 @@ export default {
 
     onAuthStateChanged(getAuth(app), user => this.user = user);
   },
+  methods: {
+    closeMenu() {
+      this.menuVisible = false;
+      this.$nextTick(() => this.$forceUpdate());
+    }
+  },
   data() {
     return {
       online: window.navigator.onLine,
@@ -47,12 +56,6 @@ export default {
       pendingSave: false,
     };
   },
-  methods: {
-    async logout() {
-      await signOut(getAuth(app));
-    }
-  },
-  watch: {}
 };
 </script>
 

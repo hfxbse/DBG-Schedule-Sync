@@ -1,6 +1,6 @@
 <template>
   <div class="center" @click="$emit('click', $event)">
-    <div :class="{without: lift}">
+    <div :class="{'center-slot-wrapper': true, without: lift}" @click="$emit('click', $event)">
       <slot></slot>
     </div>
   </div>
@@ -22,6 +22,7 @@ export default {
 <style scoped>
 .center {
   min-height: 100vh;
+  min-width: 100%;
 
   display: grid;
   place-items: center;
@@ -35,5 +36,12 @@ export default {
   .without {
     padding-bottom: 17rem;
   }
+}
+</style>
+
+<style>
+.center-slot-wrapper > * {
+  margin: auto;
+  width: fit-content;
 }
 </style>
