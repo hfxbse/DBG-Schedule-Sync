@@ -29,10 +29,14 @@ export default {
 }
 
 .center > * {
-  padding: 5rem 1.5rem 12rem;
+  padding: 5rem 1.5rem 3rem;
 }
 
 @media (min-width: 70ch) {
+  .center > * {
+    padding-bottom: 8rem;
+  }
+
   .without {
     padding-bottom: 17rem;
   }

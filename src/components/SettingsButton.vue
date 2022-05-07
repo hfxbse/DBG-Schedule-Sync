@@ -51,12 +51,12 @@ export default {
 img {
   height: 1.5rem;
   width: 1.5rem;
-  margin-right: .5rem;
+  margin-right: 0.5rem;
 }
 
 span {
   margin: auto;
-  padding-right: 1.5rem;
+  padding-right: 2rem;
   font-weight: 500;
   font-size: 1rem;
   user-select: none;

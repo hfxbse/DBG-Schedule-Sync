@@ -8,6 +8,11 @@
         lable="Ausloggen"
         @click="logout"
     />
+    <div class="options">
+      <h1>Anzeigeoptionen</h1>
+      <settings-toggle v-model="contentOptions.weekType" class="toggle" label="A/B-Woche anzeigen"/>
+      <settings-toggle v-model="contentOptions.additionalInfo" class="toggle" label="Informationen zum Tag anzeigen"/>
+    </div>
     <settings-button
         :image="{
         src: require('@/assets/delete_forever.svg'),
@@ -35,10 +40,12 @@ import {getAuth, signOut, deleteUser} from "firebase/auth";
 import {getAnalytics, logEvent} from "firebase/analytics";
 import {app} from "@/main";
 import ErrorMessage from "@/components/ErrorMessage";
+import SettingsToggle from "@/components/SettingsToggle";
 
 export default {
   name: "Settings",
   components: {
+    SettingsToggle,
     ErrorMessage,
     SettingsButton
   },
@@ -68,6 +75,10 @@ export default {
     return {
       deletionStart: new Date(),
       deletionError: false,
+      contentOptions: {
+        weekType: true,
+        additionalInfo: true,
+      }
     };
   }
 };
@@ -76,7 +87,7 @@ export default {
 <style scoped>
 
 button:first-of-type {
-  margin: 0 0 2.5rem;
+  margin: 0 0 1.5rem;
 }
 
 @keyframes long-press {
@@ -693,5 +704,31 @@ button:last-of-type:active {
   animation-duration: 15s;
   animation-timing-function: ease-out;
   animation-fill-mode: forwards;
+}
+
+.options {
+  padding: 1rem 1.5rem;
+  margin: 0 0 1.5rem;
+
+  background: white;
+  border-radius: 1.75rem;
+}
+
+h1 {
+  font-size: 1rem;
+  font-weight: normal;
+  text-align: center;
+
+  margin-bottom: 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+.toggle {
+  margin-bottom: 0.75rem;
+}
+
+.options > :last-child {
+  margin-bottom: 0.25rem;
 }
 </style>
