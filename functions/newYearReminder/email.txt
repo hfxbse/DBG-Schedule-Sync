@@ -9,8 +9,7 @@ https://dbg-vertretung.stubit.tv ein. Nachdem du das gemacht hast,
 sollte alles wieder in Zukunft passen.
 
 Falls du den Vertretungsplan nicht mehr auf deinem Kalender haben
-möchtest, entferne einfach den Zugriff für uns auf deinen Kalender
-über https://myaccount.google.com/permissions.
+möchtest, kannst du deinen Account in den Einstellungen löschen.
 
 Viel Erfolg im neuen Schuljahr
 DBG Vertretungsplan Synchronisation
