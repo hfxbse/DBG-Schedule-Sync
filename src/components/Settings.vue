@@ -10,8 +10,18 @@
     />
     <div class="options">
       <h1>Anzeigeoptionen</h1>
-      <settings-toggle v-model="contentOptions.weekType" class="toggle" label="A/B-Woche anzeigen"/>
-      <settings-toggle v-model="contentOptions.additionalInfo" class="toggle" label="Informationen zum Tag anzeigen"/>
+      <settings-toggle
+          :value="weekType"
+          class="toggle"
+          label="A/B-Woche anzeigen"
+          @input="save('content', {...contentOptions, week_type: $event})"
+      />
+      <settings-toggle
+          :value="additionalInfo"
+          class="toggle"
+          label="Informationen zum Tag anzeigen"
+          @input="save('content', {...contentOptions, additional_info: $event})"
+      />
     </div>
     <settings-button
         :image="{
@@ -41,6 +51,7 @@ import {getAnalytics, logEvent} from "firebase/analytics";
 import {app} from "@/main";
 import ErrorMessage from "@/components/ErrorMessage";
 import SettingsToggle from "@/components/SettingsToggle";
+import {firestore, firestoreBindings} from "@/vuefire";
 
 export default {
   name: "Settings",
@@ -48,6 +59,22 @@ export default {
     SettingsToggle,
     ErrorMessage,
     SettingsButton
+  },
+  mixins: [firestoreBindings],
+  async created() {
+    let {db} = await firestore();
+
+    this.setupBind(
+        'contentOptions',
+        db.collection('query_configs')
+            .doc(this.user.uid)
+            .collection('options')
+            .doc('content'),
+        () => {
+          this.configState = {};
+          return {};
+        }
+    );
   },
   methods: {
     async logout() {
@@ -69,16 +96,33 @@ export default {
           );
         }
       }
-    }
+    },
+    async save(category, values) {
+      let {db, serverTimestamp} = await firestore();
+      const config = db.collection('query_configs').doc(this.user.uid);
+
+      if ((await config.get()).exists) {
+        config.update({last_update: serverTimestamp()});
+      } else {
+        config.set({last_update: serverTimestamp()});
+      }
+
+      config.collection('options').doc(category).set(values);
+    },
+  },
+  computed: {
+    weekType() {
+      return this.contentOptions?.week_type ?? true;
+    },
+    additionalInfo() {
+      return this.contentOptions?.additional_info ?? true;
+    },
   },
   data() {
     return {
       deletionStart: new Date(),
       deletionError: false,
-      contentOptions: {
-        weekType: true,
-        additionalInfo: true,
-      }
+      contentOptions: {}
     };
   }
 };

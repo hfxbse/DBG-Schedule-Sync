@@ -13,7 +13,7 @@
     <center-container v-if="menuVisible" class="menu" @click.self="pendingSave = menuVisible = false">
       <keep-alive>
         <auth v-if="!user" @success="menuVisible = false"/>
-        <settings v-else @close="menuVisible = false"/>
+        <settings v-else :user="user" @close="menuVisible = false"/>
       </keep-alive>
     </center-container>
   </div>

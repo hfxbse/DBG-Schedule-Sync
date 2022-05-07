@@ -365,7 +365,7 @@ function addChange(api, calendarId, change) {
 let auth;
 
 async function updateCalendar(plan, config) {
-  const userUid = config.id;
+  const userUid = config.query.id;
 
   // noinspection SpellCheckingInspection
   let oAuthClient = new google.auth.OAuth2(credentials.client_id, credentials.client_secret, 'postmessage');
@@ -433,12 +433,20 @@ async function updateCalendar(plan, config) {
       }
     }
 
-    await updateWeekTypeEvent(api, calendarId, plan.data);
-    await addDayInformation(createContext(userUid, 'addDayInformation'), api, calendarId, plan.data);
+    if (config.content?.week_type ?? true) {
+      await updateWeekTypeEvent(api, calendarId, plan.data);
+    }
 
-    let changes = await getChanges(config, plan.snapshot.ref);
+    if (config.content?.additional_info ?? true) {
+      await addDayInformation(createContext(userUid, 'addDayInformation'), api, calendarId, plan.data);
+    }
 
-    await rateLimiter(createContext(userUid, 'addChanges'), changes.map(change => () => addChange(api, calendarId, change.data())));
+    let changes = await getChanges(config.query, plan.snapshot.ref);
+
+    await rateLimiter(
+        createContext(userUid, 'addChanges'),
+        changes.map(change => () => addChange(api, calendarId, change.data()))
+    );
   } catch (error) {
     functions.logger.error(`Calender synchronisation failed for user ${userUid}`, error);
   }
@@ -463,6 +471,15 @@ async function onConfigChange(config) {
   const adminConfig = db.collection('query_configs').doc(config.id);
   const changeIdentifier = {userUid: config.id, updateTime: config.updateTime.toDate()};
 
+  if (!config.data().grade) {
+    functions.logger.info(
+        `Configuration is incomplete, exiting.`,
+        changeIdentifier
+    );
+
+    return;
+  }
+
   functions.logger.debug(`Debouncing config changes`, changeIdentifier);
 
   for (let i = 0; i < 40; i++) {  // each iteration is one second apart
@@ -471,7 +488,6 @@ async function onConfigChange(config) {
     // eslint-disable-next-line no-await-in-loop
     let current = await adminConfig.get();
 
-    // eslint-disable-next-line no-await-in-loop
     if (!current.exists) {
       functions.logger.info(
           `Configuration got deleted while debouncing, exiting.`,
@@ -491,9 +507,14 @@ async function onConfigChange(config) {
 
   const plans = (await db.collection('plans').get()).docs;
 
+  const allConfigs = {
+    query: await adminConfig.get(),
+    content: (await adminConfig.collection('options').doc('content').get()).data()
+  };
+
   for (let snapshot of plans) {
     // eslint-disable-next-line no-await-in-loop
-    await updateCalendar({snapshot, data: snapshot.data()}, await adminConfig.get());
+    await updateCalendar({snapshot, data: snapshot.data()}, allConfigs);
   }
 }
 
@@ -511,10 +532,17 @@ exports.schedule = functions
         // eslint-disable-next-line no-await-in-loop
         await rateLimiter(
             createContext(undefined, 'updateCalendar'),
-            query_configs.map(config => () => updateCalendar({
-              snapshot,
-              data: snapshot.data()
-            }, config)),
+            query_configs.map(config => async () => {
+              const allConfigs = {
+                query: config,
+                content: (await config.ref.collection('options').doc('content').get()).data()
+              };
+
+              await updateCalendar({
+                snapshot,
+                data: snapshot.data()
+              }, allConfigs);
+            }),
             20
         );
       }

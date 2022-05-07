@@ -79,16 +79,9 @@ import OptionsButton from '@/components/OptionsButton';
 import ButtonContainer from '@/components/ButtonContainer';
 import SettingTitle from '@/components/SettingTitle';
 
-import {app, appOptions} from "@/main";
+import {app} from "@/main";
 import {getAnalytics, logEvent} from "firebase/analytics";
-
-const firestore = async () => {
-  const firebase = (await import(/* webpackChunkName: "firebase_compat"*/ 'firebase/compat/app')).default;
-  await import(/* webpackChunkName: "firebase_compat"*/ 'firebase/compat/firestore');
-
-  firebase.initializeApp(appOptions);
-  return {db: firebase.firestore(), serverTimestamp: firebase.firestore.FieldValue.serverTimestamp};
-};
+import {firestore, firestoreBindings} from "@/vuefire";
 
 const LowerGradeSettings = () => import('@/components/LowerGradeSettings');
 const CourseSelection = () => import('@/components/CourseSelection');
@@ -109,10 +102,8 @@ export default {
     OptionsButton,
     centerContainer: Center
   },
+  mixins: [firestoreBindings],
   props: {
-    user: {
-      required: true,
-    },
     pendingSave: {
       required: true,
       type: Boolean
@@ -330,7 +321,7 @@ export default {
     },
     user: {
       immediate: true,
-      async handler(user, oldUser) {
+      async handler(user) {
         if (user) {
           let {db} = await firestore();
 
@@ -339,18 +330,23 @@ export default {
             this.$emit('saved');
           }
 
-          this.$bind('config', db.collection('query_configs').doc(user.uid));
-          this.$bind(
-              'rawCourses',
-              db.collection('query_configs').doc(user.uid).collection('courses')
+          this.setupBind(
+              'config',
+              db.collection('query_configs').doc(this.user.uid),
+              () => {
+                this.configState = {};
+                return {};
+              }
           );
-        } else if (!user && oldUser) {
-          this.$unbind('config', () => {
-          });
-          this.$unbind('rawCourses', () => []);
-          this.coursesState = {};
 
-          this.configState = {};
+          this.setupBind(
+              'rawCourses',
+              db.collection('query_configs').doc(this.user.uid).collection('courses'),
+              () => {
+                this.coursesState = {};
+                return [];
+              }
+          );
         }
       }
     }
