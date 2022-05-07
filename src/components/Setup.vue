@@ -87,7 +87,7 @@ const firestore = async () => {
   await import(/* webpackChunkName: "firebase_compat"*/ 'firebase/compat/firestore');
 
   firebase.initializeApp(appOptions);
-  return firebase.firestore();
+  return {db: firebase.firestore(), serverTimestamp: firebase.firestore.FieldValue.serverTimestamp};
 };
 
 const LowerGradeSettings = () => import('@/components/LowerGradeSettings');
@@ -124,7 +124,7 @@ export default {
       logEvent(analyticsInstance, eventName, parameter);
     },
     async getConfig() {
-      let db = await firestore();
+      let {db} = await firestore();
       return db.collection('query_configs').doc(this.user.uid);
     },
     async save() {
@@ -143,16 +143,19 @@ export default {
         }
       });
 
+      let {db, serverTimestamp} = await firestore();
+
       doc.set({
         grade: Number(config.grade),
         class: config.class,
         profile: config.profile,
         sport: config.sport,
-        religion: config.religion
+        religion: config.religion,
+        last_update: serverTimestamp(),
       });
 
       if (config.grade > 11) {
-        let db = await firestore();
+
         let batch = db.batch();
 
         let courses = Object.keys(this.courses);
@@ -237,7 +240,7 @@ export default {
       return false;
     },
     modified() {
-      let keys = Object.keys(this.configState);
+      let keys = Object.keys(this.configState).filter(key => key !== 'last_update');
       let lowerGradeChanged = !this.config || keys.some(key => this.config[key] !== this.configState[key]);
 
       let newCourses = Object.keys(this.courses);
@@ -286,7 +289,7 @@ export default {
       if ((!old || !old.grade) && current) {
         this.configState = {...current};
       } else {
-        let keys = Object.keys(this.configState);
+        let keys = Object.keys(this.configState).filter(key => key !== 'last_update');
 
         keys.forEach((key) => {
           if (this.configState[key] === old[key]) {
@@ -329,7 +332,7 @@ export default {
       immediate: true,
       async handler(user, oldUser) {
         if (user) {
-          let db = await firestore();
+          let {db} = await firestore();
 
           if (this.validInput && this.modified && this.pendingSave) {
             await this.save();
