@@ -36,7 +36,7 @@ html, body, #app {
 .links {
   position: fixed;
   top: 1.1rem;
-  right: 1rem;
+  right: 1.25rem;
 
   z-index: 10;
 

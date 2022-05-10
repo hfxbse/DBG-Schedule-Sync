@@ -69,7 +69,7 @@ button {
 
   position: fixed;
   top: 1rem;
-  left: 1rem;
+  left: 1.25rem;
 
   z-index: 1;
 

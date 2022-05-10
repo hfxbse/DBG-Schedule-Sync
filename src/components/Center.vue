@@ -21,11 +21,13 @@ export default {
 
 <style scoped>
 .center {
-  min-height: 100vh;
+  height: 100vh;
   min-width: 100%;
 
   display: grid;
   place-items: center;
+
+  overflow: auto;
 }
 
 .center > * {
