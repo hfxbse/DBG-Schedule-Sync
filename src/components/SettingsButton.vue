@@ -34,7 +34,7 @@ export default {
   outline: none;
 
   min-width: 17.5rem;
-  width: 50vw;
+  width: 35vw;
   max-width: 100%;
 
   display: flex;
