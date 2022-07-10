@@ -14,7 +14,11 @@ exports.googleOAuth = functions.region('europe-west1').https.onCall(async ({auth
   credentials = require('./oauth_client.json').web;
   webAppSettings = require('./web_client.json');
 
-  firebase.initializeApp(webAppSettings);
+  try {
+    firebase.initializeApp(webAppSettings);
+    // eslint-disable-next-line no-empty
+  } catch {
+  }
 
   const client = new google.auth.OAuth2(
       credentials.client_id,
