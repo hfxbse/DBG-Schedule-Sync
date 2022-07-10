@@ -19,7 +19,7 @@ export const firestoreBindings = {
       immediate: true,
       async handler(user, oldUser) {
         if (user) {
-          Object.values(this.vuefireBinds).forEach(({field, source}) => this.bind(field, source));
+          Object.values(this.vuefireBinds).forEach(({field, source}) => this.$bind(field, source));
         } else if (!user && oldUser) {
           Object.values(this.vuefireBinds).forEach(({field, reset}) => this.$unbind(field, reset));
         }
@@ -28,13 +28,12 @@ export const firestoreBindings = {
   },
   methods: {
     setupBind(field, source, reset) {
-      this.$bind(field, source);
-
       if (field in this.vuefireBinds) {
         this.$unbind(field, reset);
         reset();
       }
 
+      this.$bind(field, source);
       this.vuefireBinds[field] = {field, source, reset};
     },
   },
