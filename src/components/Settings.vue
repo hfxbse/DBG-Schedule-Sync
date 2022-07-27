@@ -29,8 +29,8 @@
         alt: 'Delete forever icon'
       }"
         :text-style="{color: 'white', 'font-weight': 'bold'}"
-        class="delete"
-        lable="Account löschen"
+        :class="{delete: true, pressed: authorizing}"
+        :lable="authorizing ? 'Warten auf Authentifizierung…' : 'Account löschen'"
         @mousedown.native="deletionStart = new Date()"
         @touchstart.native="deletionStart = new Date()"
         @contextmenu.prevent
@@ -46,7 +46,14 @@
 
 <script>
 import SettingsButton from "@/components/SettingsButton";
-import {getAuth, signOut, deleteUser} from "firebase/auth";
+import {
+  getAuth,
+  signOut,
+  deleteUser,
+  reauthenticateWithCredential,
+  GoogleAuthProvider,
+  signInWithPopup
+} from "firebase/auth";
 import {getAnalytics, logEvent} from "firebase/analytics";
 import {app} from "@/main";
 import ErrorMessage from "@/components/ErrorMessage";
@@ -82,11 +89,23 @@ export default {
       this.$emit('close');
     },
     async deleteAccount() {
-      if (new Date() - this.deletionStart >= 15 * 1000) {
+      if (new Date() - this.deletionStart >= 7.5 * 1000) {
         try {
-          await deleteUser(getAuth(app).currentUser);
+          const user = getAuth(app).currentUser;
+          const google = new GoogleAuthProvider();
+          google.setCustomParameters({
+            login_hint: user.email,
+          });
+
+          this.authorizing = true;
+
+          const authCode = await signInWithPopup(getAuth(app), google);
+          await reauthenticateWithCredential(user, GoogleAuthProvider.credentialFromResult(authCode));
+
+          await deleteUser(user);
           this.$emit('close');
         } catch (e) {
+          console.dir(e);
           this.deletionError = true;
 
           logEvent(
@@ -94,6 +113,8 @@ export default {
               'exception',
               {description: 'Could not delete user', fatal: false, ...e}
           );
+        } finally {
+          this.authorizing = false;
         }
       }
     },
@@ -122,7 +143,8 @@ export default {
     return {
       deletionStart: new Date(),
       deletionError: false,
-      contentOptions: {}
+      contentOptions: {},
+      authorizing: false,
     };
   }
 };
@@ -745,9 +767,14 @@ button:last-of-type {
 
 button:last-of-type:active {
   animation-name: long-press;
-  animation-duration: 15s;
+  animation-duration: 7.5s;
   animation-timing-function: ease-out;
   animation-fill-mode: forwards;
+}
+
+/*noinspection CssUnusedSymbol*/
+button.pressed {
+  background: #690000 !important;
 }
 
 .options {
