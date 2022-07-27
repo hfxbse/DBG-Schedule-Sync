@@ -53,7 +53,7 @@ exports.createEvent = (row, date) => {
     description += '</em>';
   }
 
-  let lessons = [...row.lessons.matchAll(/\d+/gi)];
+  let lessons = [...(row.lessons ?? '').matchAll(/\d+/gi)];
   let start = new Date(date);
   let end = new Date(date);
 
