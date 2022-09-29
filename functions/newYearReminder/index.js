@@ -63,9 +63,31 @@ async function sendEmails(config, recipients) {
     DefaultTemplateData: JSON.stringify({}),
   }).promise();
 }
+
+async function getRecipients(pageToken) {
+  const users = await auth.listUsers(1000, pageToken);
+
+  const recipients = users.users.map(async record => {
+    const config = await db.collection('query_configs').doc(record.uid).get();
+    const lastUpdate = config.data()?.last_update?.toDate() ?? new Date(0);
+
+    if (lastUpdate < new Date(new Date().setDate(0))) {
+      return {address: record.email, name: record.displayName.replace("​", "").trim()};
+    }
+
+    return undefined;
+  });
+
+  if (users.pageToken) {
+    return (await Promise.all(recipients)).concat(await getRecipients(users.pageToken));
+  } else {
+    return Promise.all(recipients);
+  }
+}
+
 const functionOptions = functions
     .region('europe-west1')
-    .pubsub.schedule('0 17 16 SEP *').timeZone('Europe/Berlin');
+    .pubsub.schedule('0 15 16 SEP *').timeZone('Europe/Berlin');
 
 exports.new_year_reminder = functionOptions.onRun(async () => {
   AWS = require('aws-sdk');
@@ -94,25 +116,10 @@ exports.new_year_reminder = functionOptions.onRun(async () => {
     auth = admin.auth();
   }
 
-  let calendars = await db.collection('calendars').get();
-  calendars = calendars.docs.filter(doc => {
-    const data = doc.data().google;
-    return 'id' in data && 'refresh_token' in data;
-  });
+  let recipients = await getRecipients();
+  recipients = recipients.filter(address => address !== undefined);
 
-  if (calendars.length > 0) {
-    let recipients = await Promise.all(calendars.map(doc => (async () => {
-      try {
-        const user = await auth.getUser(doc.id);
-        return {address: user.email, name: user.displayName.replace("​", "").trim()};
-      } catch (e) {
-        functions.logger.warn(e);
-        return undefined;
-      }
-    })()));
-
-    recipients = recipients.filter(address => address !== undefined);
-
+  if (recipients.length > 0) {
     if (process.env.FIREBASE_DEBUG_MODE) {
       functions.logger.debug('Removing email addresses not marked as debug');
       // noinspection JSUnresolvedVariable
@@ -123,9 +130,6 @@ exports.new_year_reminder = functionOptions.onRun(async () => {
 
     if (recipients.length > 0) {
       await sendEmails(config, recipients.filter(recipient => recipient !== undefined));
-      return;
     }
   }
-
-  functions.logger.info("No emails send as there are no active users.");
 });
