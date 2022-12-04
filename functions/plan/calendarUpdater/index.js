@@ -122,7 +122,7 @@ async function actionRunner(context, action, retryDepth = 0, maxDepth = 3, error
 
     const delay = 12 * (retryDepth + 1) + randomBetween(0, 8);
 
-    functions.logger.warn(`Rate limit exceeded, waiting ${delay} seconds before retrying`, {
+    functions.logger.debug(`Rate limit exceeded, waiting ${delay} seconds before retrying`, {
       ...context,
       retryDepth: (retryDepth + 1),
       maxDepth: (maxDepth + 1),
