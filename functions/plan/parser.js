@@ -4,6 +4,7 @@ let HTMLParser;
 
 const functions = require('firebase-functions');
 let admin;
+let fieldValue;
 
 let createEvent;
 
@@ -25,24 +26,40 @@ async function download(url, encoding) {
 }
 
 function prepareClasses(text) {
-  if (text[0] !== 'K' && text[0] !== 'F') {
-    let grade = text[0];
+  // entry other than a list of grades
+  if (!/((\d{1,2}[a-z]+)|K\d{1,2})+/ig.test(text)) {
+    return [text, 'other'];
+  }
+
+  let grade = text[0];
+  text = text.substring(1);
+
+  if (grade === '1') {
+    grade += text[0];
+    text = text.substring(1);
+  }
+
+  let classes = [];
+  while (text.length > 0) {
+    const firstChar = text[0];
     text = text.substring(1);
 
-    if (grade === '1') {
-      grade += text[0];
-      text = text.substring(1);
+    // a K or a number while not in a K grade section indicates a new grade
+    if (firstChar === 'K' || grade !== 'K' && !isNaN(Number.parseInt(firstChar))) {
+      grade = firstChar;
+
+            // a grade higher or equal to grade 10
+            if (grade === '1') {
+                grade += firstChar;
+            }
+
+            continue;
+        }
+
+        classes.push(grade + firstChar);
     }
 
-    let classes = [];
-    for (let character of text) {
-      classes.push(grade + character);
-    }
-
-    return classes;
-  } else {
-    return [text];
-  }
+  return classes;
 }
 
 function parseRow(row) {
@@ -117,11 +134,11 @@ function updatePlanInfo(doc, batch, website) {
   }
 
   batch.set(doc, {
-    synced: admin.firestore.FieldValue.serverTimestamp(),
-    date: planDate,
-    updated: updateDateTime,
-    information: information,
-    week: dateText[dateText.length - 1]
+      synced: fieldValue.serverTimestamp(),
+      date: planDate,
+      updated: updateDateTime,
+      information: information,
+      week: dateText[dateText.length - 1]
   });
 
   return planDate;
@@ -136,34 +153,34 @@ function compareEntryData(row, other) {
 }
 
 async function updateEntries(doc, batch, website, planDate) {
-  let entries = doc.collection('entries');
-  let snapshot = await entries.get();
-  snapshot.docs.forEach(entry => batch.delete(entry.ref));
+    let entries = doc.collection('entries');
+    let snapshot = await entries.get();
+    snapshot.docs.forEach(entry => batch.delete(entry.ref));
 
-  let previousText = undefined;
-  let previousRow = {};
-  let entry = undefined;
+    let previousText = undefined;
+    let previousRow = {};
+    let entry = undefined;
 
-  website.querySelector('.mon_list').childNodes.reverse().forEach(node => {
-    if (node.classNames && node.classNames.length > 1) {
-      let row = parseRow(node);
+    website.querySelector('.mon_list').childNodes.slice(1).reverse().forEach(node => {
+        if (node.classNames && node.classNames.length > 1) {
+            let row = parseRow(node);
 
-      // catch additional text
-      if (
-          row.classes.length === 0 &&
-          row.lessons === '' &&
-          row.kind === '' &&
-          row.old_subject === '' &&
-          row.new_subject === '' &&
-          row.room === '' &&
-          row.text !== ''
-      ) {
-        previousText = !previousText ? row.text : `${row.text} ${previousText}`;
-      } else {
-        if (previousText !== undefined) {
-          row.text += ` ${previousText}`;
-          previousText = undefined;
-        }
+            // catch additional text
+            if (
+                row.classes.length === 0 &&
+                row.lessons === '' &&
+                row.kind === '' &&
+                row.old_subject === '' &&
+                row.new_subject === '' &&
+                row.room === '' &&
+                row.text !== ''
+            ) {
+                previousText = !previousText ? row.text : `${row.text} ${previousText}`;
+            } else {
+                if (previousText !== undefined) {
+                    row.text += ` ${previousText}`;
+                    previousText = undefined;
+                }
 
         createEvent = require("./event").createEvent;
 
@@ -197,7 +214,8 @@ exports.parser = functionOptions.onRun(async () => {
   HTMLParser = require('node-html-parser');
 
   DSB = require('dsbapi');
-  admin = require("firebase-admin");
+    admin = require("firebase-admin");
+    fieldValue = require("firebase-admin/firestore").FieldValue;
 
   const {dsb: config} = functions.config();
   const dsb = new DSB(config.user, config.password);
