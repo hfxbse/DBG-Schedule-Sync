@@ -127,7 +127,7 @@ function updatePlanInfo(doc, batch, website) {
     elements.querySelectorAll('td').forEach(item => {
       const info = item.text.trim();
 
-      if (!(/Vertretungsplan[:]? (Herr|Frau) \w+/i).test(info)) {
+      if (!(/Vertretungsplan:? (Herr|Frau) \w+/i).test(info)) {
         information.push(info);
       }
     });
