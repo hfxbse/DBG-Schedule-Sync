@@ -10,7 +10,7 @@
         :text-style="textStyle"
         @click="authWithGoogle"
     />
-    <error-message v-model="missingCookies" message="Drittanbieter-Cookies müssen zum anmelden aktiviert sein."/>
+    <error-message v-model="missingCookies" message="Drittanbieter-Cookies müssen zum Anmelden aktiviert sein."/>
   </div>
 </template>
 
