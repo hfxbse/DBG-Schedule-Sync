@@ -414,13 +414,13 @@ a {
 }
 
 .apply_button {
-  position: fixed;
+  position: sticky;
   bottom: 0;
   right: 0;
   left: 0;
 
   display: block;
-  width: 100vw;
+  width: 100%;
   height: 4rem;
 
   outline: none;

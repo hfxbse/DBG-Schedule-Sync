@@ -21,7 +21,7 @@ export default {
 
 <style scoped>
 .center {
-  height: 100vh;
+  height: 100%;
   min-width: 100%;
 
   display: grid;
