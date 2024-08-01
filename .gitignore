@@ -27,7 +27,4 @@ pnpm-debug.log*
 *log
 /.firebase/
 
-# Lock files
-*lock.json
-
 /public/privacy.pdf
