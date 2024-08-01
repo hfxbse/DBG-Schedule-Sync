@@ -1,3 +1,5 @@
+**️️⚠️ Service no longer functional. See this [issue](https://github.com/hfxbse/DBG-Schedule-Sync/issues/3) for details.**
+
 # DBG Schedule Sync
 
 ![Icon](https://i.imgur.com/BvxYrRZt.png)

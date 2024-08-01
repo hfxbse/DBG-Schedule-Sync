@@ -29,6 +29,15 @@
         </a>
         aus.
       </p>
+      <h2>Service Status</h2>
+      <p>
+        Da sich das Format des Vertretungsplans verändert hat, ist die
+        <b>Synchronisation derzeit nicht funktionstüchtig.</b>
+        Die Anmeldung funktioniert weiterhin, inklusive des Löschens des Accounts.
+        Für weitere Informationen und Fragen steht der
+        <a href="https://github.com/hfxbse/DBG-Schedule-Sync/issues/3">Bug-Tracker</a>
+        bereit.
+      </p>
       <setting-title title="Wähle deine Stufe"/>
       <button-container class="grades">
         <options-button
@@ -406,6 +415,10 @@ p {
 
 p:last-of-type {
   margin-bottom: 12.5%;
+}
+
+h2:not(.info h2) {
+  margin-top: 2.5rem;
 }
 
 a {
